@@ -83,7 +83,7 @@ anchor deploy --provider.cluster devnet
 
 Program ID (declared in the program): `7ze4Utjmn73v42terYZMTFVGCt2ygVu9u85US89uNGJm`
 
-> Devnet deployment status and sample transactions are listed in [`docs/DEVNET.md`](docs/DEVNET.md).
+> Deployed on Devnet: [program](https://solscan.io/account/7ze4Utjmn73v42terYZMTFVGCt2ygVu9u85US89uNGJm?cluster=devnet). Sample create/pay transactions: [`docs/DEVNET.md`](docs/DEVNET.md).
 
 ## Blinks
 
