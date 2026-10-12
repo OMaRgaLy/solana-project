@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import bs58 from "bs58";
 import {
   Connection,
@@ -13,11 +12,28 @@ export const PROGRAM_ID = new PublicKey(
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 export const CLUSTER = "devnet";
 
-const disc = (prefix: string, name: string) =>
-  createHash("sha256").update(`${prefix}:${name}`).digest().subarray(0, 8);
+// Anchor discriminators, copied from target/idl/steppe_invoice.json (sha256("<kind>:<name>")[0..8]).
+const DISC = {
+  initialize_invoice: [133, 150, 221, 0, 227, 119, 139, 200],
+  pay_invoice: [104, 6, 62, 239, 197, 206, 208, 220],
+  cancel_invoice: [88, 158, 54, 49, 53, 26, 92, 68],
+  Invoice: [51, 194, 250, 114, 6, 104, 18, 164],
+  InvoicePaidEvent: [201, 31, 158, 13, 50, 47, 66, 53],
+} as const;
+function u64le(v: bigint): Buffer {
+  const b = new Uint8Array(8);
+  new DataView(b.buffer).setBigUint64(0, v, true);
+  return Buffer.from(b);
+}
+function u16le(v: number): Buffer {
+  const b = new Uint8Array(2);
+  new DataView(b.buffer).setUint16(0, v, true);
+  return Buffer.from(b);
+}
+const disc = (name: keyof typeof DISC) => Buffer.from(DISC[name]);
 
-export const INVOICE_DISC = disc("account", "Invoice");
-export const PAID_EVENT_DISC = disc("event", "InvoicePaidEvent");
+export const INVOICE_DISC = disc("Invoice");
+export const PAID_EVENT_DISC = disc("InvoicePaidEvent");
 
 export type InvoiceAccount = {
   address: PublicKey;
@@ -38,20 +54,21 @@ export type InvoiceAccount = {
 };
 
 export function invoicePda(creator: PublicKey, invoiceId: bigint): PublicKey {
-  const id = Buffer.alloc(8);
-  id.writeBigUInt64LE(invoiceId);
+  const id = u64le(invoiceId);
   return PublicKey.findProgramAddressSync([Buffer.from("invoice"), creator.toBuffer(), id], PROGRAM_ID)[0];
 }
 
-export function decodeInvoice(address: PublicKey, data: Buffer): InvoiceAccount {
-  if (!data.subarray(0, 8).equals(INVOICE_DISC)) throw new Error("Not an invoice account");
+export function decodeInvoice(address: PublicKey, data: Uint8Array): InvoiceAccount {
+  // DataView instead of Buffer.readBigUInt64LE etc.: the browser Buffer polyfill lacks the BigInt methods.
+  const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  if (!INVOICE_DISC.every((b, i) => data[i] === b)) throw new Error("Not an invoice account");
   let o = 8;
-  const pk = () => new PublicKey(data.subarray(o, (o += 32)));
+  const pk = () => new PublicKey(data.slice(o, (o += 32)));
   const u8 = () => data[o++];
-  const u16 = () => { const v = data.readUInt16LE(o); o += 2; return v; };
-  const u64 = () => { const v = data.readBigUInt64LE(o); o += 8; return v; };
-  const i64 = () => { const v = data.readBigInt64LE(o); o += 8; return Number(v); };
-  // Option<T> is variable length in borsh: tag byte then value only when Some.
+  const u16 = () => { const v = dv.getUint16(o, true); o += 2; return v; };
+  const u64 = () => { const v = dv.getBigUint64(o, true); o += 8; return v; };
+  const i64 = () => { const v = dv.getBigInt64(o, true); o += 8; return Number(v); };
+  // Option<T> in borsh: tag byte, then the value only when Some.
   const opt = <T,>(read: () => T): T | null => (u8() ? read() : null);
 
   const creator = pk();
@@ -66,8 +83,8 @@ export function decodeInvoice(address: PublicKey, data: Buffer): InvoiceAccount 
   const isPaid = u8() === 1;
   const createdAt = i64();
   const paidAt = opt(i64);
-  const len = data.readUInt32LE(o); o += 4;
-  const title = data.subarray(o, o + len).toString("utf8"); o += len;
+  const len = dv.getUint32(o, true); o += 4;
+  const title = new TextDecoder().decode(data.slice(o, o + len)); o += len;
   const bump = u8();
   return { address, creator, invoiceId, amount, assetType, vaultRecipient, vaultBps, collaborator, collaboratorBps, payer, isPaid, createdAt, paidAt, title, bump };
 }
@@ -76,7 +93,7 @@ export async function fetchInvoice(conn: Connection, creator: PublicKey, invoice
   const address = invoicePda(creator, invoiceId);
   const info = await conn.getAccountInfo(address, "confirmed");
   if (!info || !info.owner.equals(PROGRAM_ID)) return null;
-  return decodeInvoice(address, info.data as Buffer);
+  return decodeInvoice(address, info.data);
 }
 
 export async function fetchInvoicesByCreator(conn: Connection, creator: PublicKey): Promise<InvoiceAccount[]> {
@@ -88,12 +105,10 @@ export async function fetchInvoicesByCreator(conn: Connection, creator: PublicKe
     ],
   });
   return accounts
-    .map((a) => decodeInvoice(a.pubkey, a.account.data as Buffer))
+    .map((a) => decodeInvoice(a.pubkey, a.account.data))
     .sort((a, b) => Number(b.invoiceId - a.invoiceId));
 }
 
-const u64le = (v: bigint) => { const b = Buffer.alloc(8); b.writeBigUInt64LE(v); return b; };
-const u16le = (v: number) => { const b = Buffer.alloc(2); b.writeUInt16LE(v); return b; };
 
 export type CreateParams = {
   creator: PublicKey;
@@ -107,11 +122,12 @@ export type CreateParams = {
 };
 
 export function initializeInvoiceIx(p: CreateParams): TransactionInstruction {
-  const title = Buffer.from(p.title, "utf8");
-  const titleLen = Buffer.alloc(4);
-  titleLen.writeUInt32LE(title.length);
+  const title = Buffer.from(new TextEncoder().encode(p.title));
+  const lenBytes = new Uint8Array(4);
+  new DataView(lenBytes.buffer).setUint32(0, title.length, true);
+  const titleLen = Buffer.from(lenBytes);
   const data = Buffer.concat([
-    disc("global", "initialize_invoice"),
+    disc("initialize_invoice"),
     u64le(p.invoiceId),
     u64le(p.amount),
     titleLen,
@@ -146,7 +162,7 @@ export function payInvoiceIx(inv: InvoiceAccount, payer: PublicKey): Transaction
         : { pubkey: PROGRAM_ID, isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
-    data: disc("global", "pay_invoice"),
+    data: disc("pay_invoice"),
   });
 }
 
@@ -157,6 +173,6 @@ export function cancelInvoiceIx(inv: InvoiceAccount): TransactionInstruction {
       { pubkey: inv.address, isSigner: false, isWritable: true },
       { pubkey: inv.creator, isSigner: true, isWritable: true },
     ],
-    data: disc("global", "cancel_invoice"),
+    data: disc("cancel_invoice"),
   });
 }

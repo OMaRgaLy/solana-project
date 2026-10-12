@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function ShareCard(p: Props) {
-  const [origin, setOrigin] = useState(process.env.NEXT_PUBLIC_APP_URL || "");
+  const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
     if (!origin) setOrigin(window.location.origin);

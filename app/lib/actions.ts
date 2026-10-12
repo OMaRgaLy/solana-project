@@ -22,8 +22,7 @@ export function actionError(message: string, status = 400) {
 export const actionOptions = () => new NextResponse(null, { status: 204, headers: ACTIONS_HEADERS });
 
 export function originOf(req: Request): string {
-  const env = process.env.NEXT_PUBLIC_APP_URL;
-  if (env) return env.replace(/\/$/, "");
+  // Always use the host the request came in on, so banners point at the domain that is actually serving the app.
   const u = new URL(req.url);
   const proto = req.headers.get("x-forwarded-proto") || u.protocol.replace(":", "");
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || u.host;
