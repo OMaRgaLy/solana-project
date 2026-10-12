@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
@@ -9,6 +10,8 @@ import ShareCard from "@/components/ShareCard";
 import { initializeInvoiceIx, PROGRAM_ID } from "@/lib/program";
 import { computeSplit, validateSplit } from "@/lib/split";
 import { lamportsToSol, solToLamports } from "@/lib/format";
+import { errText, log } from "@/lib/log";
+import { demoById } from "@/lib/demoWallets";
 
 const parseKey = (s: string): PublicKey | null => {
   try { return s.trim() ? new PublicKey(s.trim()) : null; } catch { return null; }
@@ -54,17 +57,22 @@ export default function CreatePage() {
     setError(null);
     try {
       const invoiceId = BigInt(Date.now());
+      log("info", `Creating invoice #${invoiceId} as ${publicKey.toBase58()} (${lamportsToSol(amount)} SOL, vault ${vaultBps / 100}%, collaborator ${collabBps / 100}%)`);
       const ix = initializeInvoiceIx({
         creator: publicKey, invoiceId, amount, title: title.trim(), vault: vaultKey,
         vaultBps, collaborator: collabKey, collaboratorBps: collabBps,
       });
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      log("info", "Built transaction, asking wallet to sign and send...");
       const tx = new Transaction({ feePayer: publicKey, blockhash, lastValidBlockHeight }).add(ix);
       const sig = await sendTransaction(tx, connection);
+      log("info", `Sent: ${sig}. Waiting for confirmation...`);
       const res = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
       if (res.value.err) throw new Error("Transaction failed on-chain: " + JSON.stringify(res.value.err));
+      log("ok", `Invoice created on Devnet. https://solscan.io/tx/${sig}?cluster=devnet`);
       setCreated({ creator: publicKey.toBase58(), id: invoiceId.toString(), sig });
     } catch (e) {
+      log("error", `Create failed: ${errText(e)}`);
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
@@ -107,6 +115,7 @@ export default function CreatePage() {
           <input type="range" min={0} max={50} step={1} value={vaultPct} onChange={(e) => setVaultPct(+e.target.value)} className="mt-2 w-full accent-teal-400" />
           <label className="label mt-2">Vault wallet (defaults to your wallet)</label>
           <input className="input" placeholder={publicKey?.toBase58() ?? "Connect wallet"} value={vaultAddr} onChange={(e) => setVaultAddr(e.target.value)} />
+          <button type="button" className="mt-1 text-xs text-teal-300 underline" onClick={() => setVaultAddr(demoById("vault").publicKey)}>Use Demo Savings Vault address</button>
           <p className="mt-1 text-xs text-slate-500">Point this at your savings / tax wallet. Roadmap: route into Kamino / Jito / Lulo yield vaults.</p>
         </div>
 
@@ -119,6 +128,7 @@ export default function CreatePage() {
               <div className="mt-2 flex justify-between text-sm"><span>Share</span><span>{collabPct}%</span></div>
               <input type="range" min={0} max={50} step={1} value={collabPct} onChange={(e) => setCollabPct(+e.target.value)} className="w-full accent-sky-400" />
               <input className="input mt-2" placeholder="Collaborator wallet address" value={collabAddr} onChange={(e) => setCollabAddr(e.target.value)} />
+              <button type="button" className="mt-1 text-xs text-teal-300 underline" onClick={() => setCollabAddr(demoById("collaborator").publicKey)}>Use Demo Collaborator address</button>
             </>
           )}
         </div>
@@ -145,10 +155,11 @@ export default function CreatePage() {
 
         <div className="card">
           {programMissing && <p className="mb-3 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">Program ID not configured (NEXT_PUBLIC_PROGRAM_ID).</p>}
+          {!publicKey && <p className="mb-3 text-sm text-slate-300">No wallet connected. <Link className="text-teal-300 underline" href="/demo">Use a built-in demo wallet</Link> (no extension needed)</p>}
           {problem && <p className="mb-3 text-sm text-amber-300">{problem}</p>}
           {error && <p className="mb-3 break-words text-sm text-red-400">{error}</p>}
           <button className="btn w-full" disabled={!publicKey || !!problem || busy || programMissing} onClick={deploy}>
-            {busy ? "Waiting for wallet / network…" : publicKey ? "Deploy Invoice to Devnet" : "Connect wallet to continue"}
+            {busy ? "Waiting for wallet / network…" : publicKey ? "Deploy Invoice to Devnet" : "Connect a wallet first"}
           </button>
         </div>
 

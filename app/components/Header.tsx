@@ -19,6 +19,7 @@ export default function Header() {
           <span className="text-2xl">🏹</span> SteppeInvoice
         </Link>
         <nav className="flex items-center gap-5 text-sm text-slate-300">
+          <Link href="/demo" className="text-teal-300 hover:text-white">Demo wallets</Link>
           <Link href="/create" className="hover:text-white">Create invoice</Link>
           {publicKey && <Link href={`/profile/${publicKey.toBase58()}`} className="hover:text-white">My profile</Link>}
           <span className="hidden rounded-full bg-amber-400/15 px-3 py-1 text-xs text-amber-300 sm:inline">Devnet</span>

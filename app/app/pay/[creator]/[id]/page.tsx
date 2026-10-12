@@ -10,6 +10,7 @@ import { payInvoiceIx } from "@/lib/program";
 import { useInvoice } from "@/lib/useInvoice";
 import { computeSplit } from "@/lib/split";
 import { lamportsToSol, pct, short, solscanAddr, solscanTx } from "@/lib/format";
+import { errText, log } from "@/lib/log";
 
 const WalletMultiButton = dynamic(
   async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
@@ -45,17 +46,22 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
     setBusy(true);
     setErr(null);
     try {
+      log("info", `Paying invoice #${invoice.invoiceId} (${lamportsToSol(invoice.amount)} SOL) from ${publicKey.toBase58()}`);
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
       const tx = new Transaction({ feePayer: publicKey, blockhash, lastValidBlockHeight }).add(payInvoiceIx(invoice, publicKey));
+      log("info", "Built pay_invoice transaction, asking wallet to sign and send...");
       const s = await sendTransaction(tx, connection);
+      log("info", `Sent: ${s}. Waiting for confirmation...`);
       const res = await connection.confirmTransaction({ signature: s, blockhash, lastValidBlockHeight }, "confirmed");
-      if (res.value.err) throw new Error("Payment failed on-chain");
+      if (res.value.err) throw new Error("Payment failed on-chain: " + JSON.stringify(res.value.err));
+      log("ok", `Paid. Split settled atomically. https://solscan.io/tx/${s}?cluster=devnet`);
       setJustPaid(s);
       confetti({ particleCount: 160, spread: 90, origin: { y: 0.6 } });
       setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0 } }), 250);
       setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1 } }), 250);
       await reload();
     } catch (e) {
+      log("error", `Payment failed: ${errText(e)}`);
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
@@ -92,7 +98,8 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
         ) : (
           <div className="flex flex-col items-center gap-2">
             <WalletMultiButton>Connect &amp; Pay</WalletMultiButton>
-            <span className="text-xs text-slate-500">Phantom or Solflare · Devnet</span>
+            <span className="text-xs text-slate-500">Phantom, Solflare, or a built-in test wallet</span>
+            <Link className="text-sm text-teal-300 underline" href="/demo">Use a demo wallet (no extension)</Link>
           </div>
         )}
         {err && <p className="break-words text-sm text-red-400">{err}</p>}

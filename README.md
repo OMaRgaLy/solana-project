@@ -1,12 +1,12 @@
-# 🏹 SteppeInvoice
+﻿# ðŸ¹ SteppeInvoice
 
-**Invoice the world. Get paid in one click.** Solana invoices with instant on-chain auto-split, shareable Blinks, and an official Kazakhstan *Акт выполненных работ* sealed with an on-chain QR.
+**Invoice the world. Get paid in one click.** Solana invoices with instant on-chain auto-split, shareable Blinks, and an official Kazakhstan *ÐÐºÑ‚ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð½Ñ‹Ñ… Ñ€Ð°Ð±Ð¾Ñ‚* sealed with an on-chain QR.
 
 Built for the Superteam Kazakhstan track of the Colosseum Crypto World's Fair Hackathon.
 
 ## The problem
 
-Freelancers in Kazakhstan and Central Asia selling to clients abroad face slow, expensive SWIFT transfers, cards that don't work across borders, and platforms (Upwork, Fiverr) that own their reputation. On top of that, local accounting and tax filing still expect a formal *Акт выполненных работ* tied to every payment.
+Freelancers in Kazakhstan and Central Asia selling to clients abroad face slow, expensive SWIFT transfers, cards that don't work across borders, and platforms (Upwork, Fiverr) that own their reputation. On top of that, local accounting and tax filing still expect a formal *ÐÐºÑ‚ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð½Ñ‹Ñ… Ñ€Ð°Ð±Ð¾Ñ‚* tied to every payment.
 
 ## The solution
 
@@ -46,9 +46,13 @@ flowchart LR
 
 Invoice PDA seeds: `["invoice", creator, invoice_id (u64 LE)]`.
 
-- `initialize_invoice` validates `vault_bps + collaborator_bps <= 10000`, title ≤ 64 bytes, amount > 0, and that a collaborator share has a collaborator wallet.
+- `initialize_invoice` validates `vault_bps + collaborator_bps <= 10000`, title â‰¤ 64 bytes, amount > 0, and that a collaborator share has a collaborator wallet.
 - `pay_invoice` computes shares with `checked_mul` / `checked_div`, transfers to vault, collaborator and creator via the System Program in the same transaction, sets `is_paid`, `payer`, `paid_at`, and emits `InvoicePaidEvent`. The creator receives the remainder, so rounding dust is never lost. A paid invoice cannot be paid again.
 - `cancel_invoice` closes an **unpaid** invoice and refunds rent to the creator; only the creator can call it.
+
+## Try it without any wallet extension
+
+Open `/demo`: five public Devnet test wallets (freelancer, two clients, vault, collaborator) are built into the site. Their keys are published on purpose and hold worthless test SOL. Connect *Demo Freelancer*, create an invoice, switch to *Demo Client 1*, pay it, and watch the balances change. An on-screen Activity log shows every step. Phantom/Solflare also work.
 
 ## Run it
 
@@ -87,7 +91,7 @@ Program ID (declared in the program): `7ze4Utjmn73v42terYZMTFVGCt2ygVu9u85US89uN
 
 ## Blinks
 
-- `GET /actions.json` (and `/api/actions.json`): routing rules for `/pay/*/*` → `/api/actions/invoice/*/*`.
+- `GET /actions.json` (and `/api/actions.json`): routing rules for `/pay/*/*` â†’ `/api/actions/invoice/*/*`.
 - `GET /api/actions/invoice/:creator/:id`: Action metadata (dynamic banner, title, auto-split description, `Pay Invoice` label).
 - `POST /api/actions/invoice/:creator/:id` with `{ "account": "<payer>" }`: returns a base64 `pay_invoice` transaction + message.
 
@@ -98,9 +102,10 @@ Blinks unfurl inside X only from a public HTTPS domain registered with Dialect; 
 - **SOL only** on Devnet in this submission. SPL USDC is the first roadmap item.
 - The **savings vault** is a configurable wallet address. Routing it into yield vaults (Kamino / Jito / Lulo) is roadmap, not implemented; the UI says so.
 - Invoice description and client name are kept off-chain (link parameters / Act form); only the title is stored on-chain.
-- The KZT equivalent on the Act is an informational rate (CoinGecko SOL/USD × open.er-api USD/KZT) at generation time, not an official NBK rate. The Act is a helper document; check requirements with your accountant.
+- The KZT equivalent on the Act is an informational rate (CoinGecko SOL/USD Ã— open.er-api USD/KZT) at generation time, not an official NBK rate. The Act is a helper document; check requirements with your accountant.
 - The program has tests but **has not been independently audited**.
 
 ## Roadmap
 
 SPL USDC, yield-vault routing, per-invoice client details on-chain via hashed metadata, recurring invoices, Kaspi/KZT off-ramp partners, e-sign of the Act.
+

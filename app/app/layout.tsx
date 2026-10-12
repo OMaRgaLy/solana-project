@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
+import LogPanel from "@/components/LogPanel";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin", "cyrillic"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-500 print:hidden">
             SteppeInvoice · built for the Superteam Kazakhstan track · Solana Devnet
           </footer>
+          <LogPanel />
         </Providers>
       </body>
     </html>

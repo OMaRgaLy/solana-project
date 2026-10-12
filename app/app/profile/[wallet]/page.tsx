@@ -7,6 +7,7 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import { cancelInvoiceIx, fetchInvoicesByCreator, type InvoiceAccount } from "@/lib/program";
 import { computeSplit } from "@/lib/split";
 import { lamportsToSol, short, solscanAddr } from "@/lib/format";
+import { errText, log } from "@/lib/log";
 
 export default function ProfilePage({ params }: { params: Promise<{ wallet: string }> }) {
   const { wallet } = use(params);
@@ -35,9 +36,12 @@ export default function ProfilePage({ params }: { params: Promise<{ wallet: stri
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
       const tx = new Transaction({ feePayer: publicKey, blockhash, lastValidBlockHeight }).add(cancelInvoiceIx(inv));
       const sig = await sendTransaction(tx, connection);
+      log("info", `Cancelling invoice #${inv.invoiceId}, sent ${sig}`);
       await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+      log("ok", "Invoice cancelled, rent refunded.");
       await load();
     } catch (e) {
+      log("error", `Cancel failed: ${errText(e)}`);
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusyId(null);
