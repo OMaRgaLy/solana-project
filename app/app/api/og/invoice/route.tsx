@@ -35,9 +35,9 @@ export async function GET(req: Request) {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", fontSize: 34, fontWeight: 700 }}>🏹 SteppeInvoice</div>
+          <div style={{ display: "flex", fontSize: 34, fontWeight: 700 }}>SteppeInvoice</div>
           <div style={{ display: "flex", padding: "10px 22px", borderRadius: 999, background: status === "PAID" ? "#22c55e" : "rgba(255,255,255,0.18)", fontSize: 26 }}>
-            {status === "PAID" ? "✓ PAID" : "✓ SteppeInvoice Verified"}
+            {status === "PAID" ? "PAID" : "SteppeInvoice Verified"}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>

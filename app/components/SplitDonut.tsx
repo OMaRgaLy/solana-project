@@ -4,23 +4,21 @@ export default function SplitDonut({ parts, center }: { parts: Part[]; center: s
   const r = 52;
   const c = 2 * Math.PI * r;
   const total = parts.reduce((s, p) => s + p.value, 0) || 1;
-  let offset = 0;
+  const offsets = parts.map((_, i) => parts.slice(0, i).reduce((s, p) => s + (p.value / total) * c, 0));
   return (
     <div className="flex items-center gap-6">
       <svg viewBox="0 0 140 140" className="h-36 w-36 shrink-0 -rotate-90" role="img" aria-label="Split distribution">
         <circle cx="70" cy="70" r={r} fill="none" stroke="#12233b" strokeWidth="18" />
-        {parts.map((p) => {
+        {parts.map((p, i) => {
           const len = (p.value / total) * c;
-          const el = (
+          return (
             <circle
               key={p.label}
               cx="70" cy="70" r={r} fill="none" stroke={p.color} strokeWidth="18"
-              strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offset}
+              strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offsets[i]}
               style={{ transition: "stroke-dasharray .25s, stroke-dashoffset .25s" }}
             />
           );
-          offset += len;
-          return el;
         })}
         <text x="70" y="70" transform="rotate(90 70 70)" textAnchor="middle" dominantBaseline="middle" fill="#e8eef7" fontSize="15" fontWeight="700">
           {center}

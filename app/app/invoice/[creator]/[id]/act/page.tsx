@@ -103,12 +103,13 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
         </p>
 
         <div className="mt-6 flex items-center gap-5 rounded border-2 border-double border-blue-800 p-3 text-blue-900">
-          {qr ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={qr} alt="QR Solscan" className="h-28 w-28" /> : <div className="h-28 w-28 bg-gray-200" />}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {qr ? <img src={qr} alt="QR Solscan" className="h-28 w-28" /> : <div className="h-28 w-28 bg-gray-200" />}
           <div className="text-xs">
             <div className="text-sm font-bold uppercase">Ончейн-печать SteppeInvoice ✓</div>
             <div>Подтверждение взаиморасчёта в блокчейне Solana</div>
             <div className="mt-1 break-all font-mono">TX: {paySig ?? "—"}</div>
-            <div>Сплит: Исполнитель {lamportsToSol(invoice.amount)} SOL распределён атомарно смарт-контрактом</div>
+            <div>Платёж {lamportsToSol(invoice.amount)} SOL распределён атомарно смарт-контрактом (Исполнитель / сейф / партнёр)</div>
             <div>QR ведёт на Solscan для проверки налоговым органом / бухгалтером</div>
           </div>
         </div>
