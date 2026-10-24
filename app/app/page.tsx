@@ -1,60 +1,142 @@
-import Link from "next/link";
+"use client";
 
-const steps = [
-  ["1", "Create", "Set the amount, put 10% into your savings vault, optionally split with a collaborator."],
-  ["2", "Share a Blink", "One link works in X, Telegram and anywhere Solana Actions are supported."],
-  ["3", "Get paid", "Your client pays in one click. The split settles atomically — no waiting, no middlemen."],
-  ["4", "Close the books", "Download an official Act of Completed Works with an on-chain QR seal for your accountant."],
-];
+import Link from "next/link";
+import { useI18n } from "@/lib/i18n/I18nContext";
+import { useMode } from "@/lib/mode/ModeContext";
 
 export default function Home() {
+  const { t } = useI18n();
+  const { isDemo, setMode } = useMode();
+
+  const steps = [
+    { n: "1", title: t.home.howStep1Title, desc: t.home.howStep1Desc },
+    { n: "2", title: t.home.howStep2Title, desc: t.home.howStep2Desc },
+    { n: "3", title: t.home.howStep3Title, desc: t.home.howStep3Desc },
+    { n: "4", title: t.home.howStep4Title, desc: t.home.howStep4Desc },
+  ];
+
+  const features = [
+    { title: t.home.feat1Title, desc: t.home.feat1Desc, color: "border-teal-500/30" },
+    { title: t.home.feat2Title, desc: t.home.feat2Desc, color: "border-purple-500/30" },
+    { title: t.home.feat3Title, desc: t.home.feat3Desc, color: "border-sky-500/30" },
+  ];
+
   return (
-    <div className="space-y-16">
-      <section className="grid items-center gap-10 pt-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <span className="rounded-full bg-teal-400/15 px-3 py-1 text-xs font-semibold text-teal-300">🇰🇿 Built for Central Asian freelancers</span>
-          <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
-            Invoice the world.<br />Get paid in <span className="text-teal-300">one click</span>.
+    <div className="space-y-20 py-4">
+      {/* Hero Section */}
+      <section className="grid items-center gap-12 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-7">
+          <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-semibold text-teal-300">
+            <span>🇰🇿</span> {t.home.badge}
+          </div>
+
+          <h1 className="text-4xl font-black leading-tight tracking-tight sm:text-6xl text-white">
+            {t.home.heroTitle1}
+            <br />
+            <span className="bg-gradient-to-r from-teal-300 via-cyan-300 to-purple-400 bg-clip-text text-transparent">
+              {t.home.heroTitleAccent}
+            </span>
           </h1>
-          <p className="max-w-xl text-lg text-slate-300">
-            Freelancers in Kazakhstan wait days for SWIFT, pay heavy fees, and can&apos;t use local cards abroad.
-            SteppeInvoice turns an invoice into a Solana Blink: your client pays from a tweet, funds split instantly
-            between you, your savings vault and your collaborator — and you get the paperwork your tax office expects.
+
+          <p className="max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            {t.home.heroDesc}
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/create" className="btn">Create an invoice →</Link>
-            <a href="#how" className="btn btn-ghost">How it works</a>
+
+          <div className="flex flex-wrap gap-4 pt-2">
+            <Link href="/create" className="btn text-base py-3 px-6 shadow-xl">
+              {t.home.createCta}
+            </Link>
+            {!isDemo ? (
+              <button
+                onClick={() => setMode("demo")}
+                className="btn btn-ghost text-base py-3 px-6 border-amber-400/30 text-amber-300 hover:bg-amber-400/15"
+              >
+                🧪 {t.home.demoCta}
+              </button>
+            ) : (
+              <Link href="/create" className="btn btn-ghost text-base py-3 px-6">
+                {t.home.howTitle} ↓
+              </Link>
+            )}
           </div>
         </div>
-        <div className="card space-y-3">
-          <div className="text-xs uppercase tracking-widest text-slate-400">Example settlement · 1 SOL invoice</div>
-          {[["Freelancer", "85%", "bg-teal-400", "w-[85%]"], ["Savings Vault", "10%", "bg-amber-400", "w-[10%]"], ["Collaborator", "5%", "bg-sky-400", "w-[5%]"]].map(([n, p, c, w]) => (
-            <div key={n}>
-              <div className="flex justify-between text-sm"><span>{n}</span><span>{p}</span></div>
-              <div className="h-2 rounded bg-white/10"><div className={`h-2 rounded ${c} ${w}`} /></div>
+
+        {/* Settlement Simulator Card */}
+        <div className="lg:col-span-5">
+          <div className="card space-y-4 border-white/15 bg-gradient-to-b from-[#0f172a]/90 to-[#070b14]/90 p-6 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <span className="text-xs font-mono uppercase tracking-wider text-teal-300 font-bold">
+                ⚡ Пример расщепления · Инвойс 1 SOL
+              </span>
+              <span className="badge badge-solana">400 ms finality</span>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-white">🧑‍💻 Исполнитель</span>
+                  <span className="font-mono text-teal-300">84% (0.84 SOL)</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full rounded-full bg-teal-400 w-[84%]"></div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-white">🤝 Напарник (Дизайнер)</span>
+                  <span className="font-mono text-sky-300">15% (0.15 SOL)</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full rounded-full bg-sky-400 w-[15%]"></div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-white">⚡ Steppe Protocol Fee</span>
+                  <span className="font-mono text-amber-300">1% (0.01 SOL)</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full rounded-full bg-amber-400 w-[1%]"></div>
+                </div>
+              </div>
+            </div>
+
+            <p className="pt-2 text-xs text-slate-400 border-t border-white/5">
+              Все 3 перевода происходят мгновенно и атомарно внутри смарт-контракта в момент подтверждения платежа заказчиком.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="space-y-6">
+        <div className="text-center max-w-xl mx-auto space-y-2">
+          <span className="badge badge-purple uppercase">Процесс</span>
+          <h2 className="text-3xl font-extrabold text-white">{t.home.howTitle}</h2>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map((s) => (
+            <div key={s.n} className="card space-y-3 hover:border-teal-400/40">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-teal-400 font-black text-slate-950 text-base shadow-md">
+                {s.n}
+              </div>
+              <h3 className="font-bold text-white text-base">{s.title}</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
             </div>
           ))}
-          <p className="pt-2 text-xs text-slate-500">All three transfers happen in the same transaction as the payment.</p>
         </div>
       </section>
 
-      <section id="how" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {steps.map(([n, t, d]) => (
-          <div key={n} className="card">
-            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-teal-400 font-bold text-black">{n}</div>
-            <div className="font-semibold">{t}</div>
-            <p className="mt-1 text-sm text-slate-400">{d}</p>
+      {/* Value Pillars Section */}
+      <section className="grid gap-6 md:grid-cols-3">
+        {features.map((f, i) => (
+          <div key={i} className={`card space-y-2 ${f.color}`}>
+            <h3 className="font-bold text-white text-base">{f.title}</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">{f.desc}</p>
           </div>
-        ))}
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        {[
-          ["📄 Act of Completed Works", "Printable Акт выполненных работ with KZT equivalent and an on-chain QR seal linking to the settlement."],
-          ["🏦 Savings vault", "Every payment automatically sets aside a share for taxes or savings. Roadmap: route it into Kamino / Jito / Lulo yield vaults."],
-          ["🌟 Portable reputation", "Your paid-invoice history lives on-chain at a public profile — no Upwork or Fiverr lock-in."],
-        ].map(([t, d]) => (
-          <div key={t} className="card"><div className="font-semibold">{t}</div><p className="mt-1 text-sm text-slate-400">{d}</p></div>
         ))}
       </section>
     </div>
