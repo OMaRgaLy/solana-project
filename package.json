@@ -3,6 +3,9 @@
   "private": true,
   "license": "ISC",
   "scripts": {
+    "dev": "npm --prefix app run dev",
+    "build": "npm --prefix app run build",
+    "start": "npm --prefix app start",
     "test": "anchor test"
   },
   "dependencies": {
