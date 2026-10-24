@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SteppeInvoice — Презентация проекта</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070b14;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --solana-emerald: #14F195;
+      --solana-purple: #9945FF;
+      --super-purple: #7C3AED;
+      --steppe-cyan: #00E5FF;
+      --amber: #F59E0B;
+      --text: #F3F4F6;
+      --text-muted: #9CA3AF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(20, 241, 149, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 60%);
+    }
+
+    .deck-container {
+      width: 94vw;
+      max-width: 1300px;
+      height: 86vh;
+      max-height: 820px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(24px);
+      border-radius: 24px;
+      padding: 50px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.97) translateY(15px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      width: fit-content;
+    }
+
+    .badge-solana { background: rgba(20, 241, 149, 0.12); color: var(--solana-emerald); border: 1px solid rgba(20, 241, 149, 0.3); }
+    .badge-purple { background: rgba(124, 58, 237, 0.15); color: #C4B5FD; border: 1px solid rgba(124, 58, 237, 0.3); }
+    .badge-amber  { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    h1 { font-size: 3.2rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; }
+    h2 { font-size: 2.2rem; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+    h3 { font-size: 1.15rem; font-weight: 500; color: var(--text-muted); margin-top: 6px; }
+
+    .highlight-emerald { color: var(--solana-emerald); }
+    .highlight-cyan { color: var(--steppe-cyan); }
+    .highlight-purple { color: #A78BFA; }
+
+    /* Grid Layouts */
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 24px;
+      flex: 1;
+    }
+
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 24px;
+      flex: 1;
+    }
+
+    .grid-4col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+      flex: 1;
+    }
+
+    .card {
+      background: rgba(13, 20, 36, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      transition: all 0.2s ease;
+    }
+    .card:hover { border-color: rgba(255, 255, 255, 0.2); transform: translateY(-3px); }
+
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #FFF;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Step Pipeline */
+    .step-num {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--super-purple), var(--solana-emerald));
+      color: #000;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+
+    /* Split Bars */
+    .split-meter {
+      height: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      display: flex;
+      margin: 16px 0;
+    }
+    .split-segment { height: 100%; transition: width 0.6s ease; }
+    .seg-creator { background: var(--solana-emerald); }
+    .seg-vault { background: var(--amber); }
+    .seg-collab { background: var(--steppe-cyan); }
+
+    /* Act Preview Document */
+    .act-preview {
+      background: #FFFFFF;
+      color: #111827;
+      border-radius: 14px;
+      padding: 24px;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .act-header { border-bottom: 2px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 12px; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 0.9rem; }
+    .qr-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-top: 1px dashed #D1D5DB;
+      padding-top: 12px;
+      margin-top: 10px;
+    }
+
+    /* Controls Bar */
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      padding: 10px 22px;
+      border-radius: 9999px;
+      z-index: 100;
+    }
+
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #FFF;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .btn-nav:hover { background: var(--solana-emerald); color: #000; }
+
+    .counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .speaker-drawer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--steppe-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+    }
+    .speaker-drawer:hover { background: rgba(255, 255, 255, 0.1); }
+
+    .notes-modal {
+      display: none;
+      position: fixed;
+      bottom: 85px;
+      max-width: 700px;
+      background: #0d1527;
+      border: 1px solid var(--solana-emerald);
+      border-radius: 14px;
+      padding: 18px 24px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #E2E8F0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 99;
+    }
+    .notes-modal.show { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- СЛАЙД 1: ТИТУЛЬНЫЙ -->
+    <div class="slide active" data-note="Всем привет! Мой проект — SteppeInvoice. Это простой и понятный инструмент для фрилансеров на Solana, решающий проблему совместных расчетов: выставить инвойс клиенту в SOL и автоматически поделить полученную оплату на три кошелька прямо в момент платежа.">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="badge badge-solana">⚡ SOLANA DEVNET · LIVE WORKING CODE</span>
+        <span class="badge badge-purple">SUPERTEAM KAZAKHSTAN TRACK</span>
+      </div>
+      <div>
+        <h1 style="margin-top: 15px;">SteppeInvoice</h1>
+        <h2 style="color: var(--steppe-cyan); font-weight: 700; margin-top: 8px; font-size: 1.9rem;">
+          Инвойс в SOL с автоматическим сплитом на 3 кошелька
+        </h2>
+        <h3 style="max-width: 800px; margin-top: 14px; line-height: 1.5;">
+          Простой некастодиальный инструмент: отправляй ссылку на оплату, получай SOL за 400 мс, дели платеж со своим напарником и получай официальный Акт с QR-печатью.
+        </h3>
+      </div>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 20px;">
+        <div class="badge badge-solana">✓ 0% КОМИССИИ СЕРВИСА</div>
+        <div class="badge badge-purple">✓ АТОМАРНЫЙ СПЛИТ НА КОНТРАКТЕ</div>
+        <div class="badge badge-amber">✓ АКТ ВЫПОЛНЕННЫХ РАБОТ</div>
+        <div class="badge badge-solana">✓ ПОДДЕРЖКА SOLANA BLINKS</div>
+      </div>
+    </div>
+
+    <!-- СЛАЙД 2: ПРОБЛЕМА -->
+    <div class="slide" data-note="Когда фрилансеры работают в паре — например, дизайнер и разработчик — клиент переводит оплату кому-то одному. Дальше начинаются ручные переводы, повторные комиссии сети, споры и подсчеты на калькуляторе. К тому же сложно откладывать деньги на налоги, а после криптоплатежа на руках не остается никакого понятного документа.">
+      <div>
+        <span class="badge badge-amber">РЕАЛЬНАЯ БОЛЬ ФРИЛАНСЕРОВ</span>
+        <h2 style="margin-top: 10px;">В чем проблема совместной работы в крипте?</h2>
+        <h3>Рутина, человеческий фактор и отсутствие бухгалтерских документов</h3>
+      </div>
+      <div class="grid-2x2">
+        <div class="card" style="border-left: 3px solid #EF4444;">
+          <div class="card-icon">💸</div>
+          <div class="card-title">Ручные переводы и двойные комиссии</div>
+          <div class="card-desc">Клиент платит одному исполнителю. Затем тот вручную переводит долю напарнику, теряя время, считая курс на калькуляторе и оплачивая комиссии повторно.</div>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--amber);">
+          <div class="card-icon">🤝</div>
+          <div class="card-title">Человеческий фактор и недоверие</div>
+          <div class="card-desc">Вся сумма заказа аккумулируется у одного человека. Возникают риски задержек, разногласий и необходимости слепого доверия.</div>
+        </div>
+        <div class="card" style="border-left: 3px solid #8B5CF6;">
+          <div class="card-icon">🏦</div>
+          <div class="card-title">Сложность накоплений на налоги</div>
+          <div class="card-desc">Фрилансеру тяжело дисциплинированно откладывать 10-15% с каждого мелкого заказа в отдельную копилку или на налоги.</div>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--steppe-cyan);">
+          <div class="card-icon">📄</div>
+          <div class="card-title">Оплата есть — документов нет</div>
+          <div class="card-desc">Хеш транзакции в Solscan непонятен бухгалтеру. Нет официального первичного документа с суммой и датой для спокойной отчетности.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СЛАЙД 3: КАК РАБОТАЕТ -->
+    <div class="slide" data-note="SteppeInvoice делает все элементарно за 4 шага: вы создаете счет, указываете сумму в SOL, процент напарника и копилки. Отправляете клиенту ссылку. Клиент нажимает Оплатить, и контракт мгновенно делит средства между всеми.">
+      <div>
+        <span class="badge badge-solana">ПРОСТОЙ И ПОНЯТНЫЙ ПРОЦЕСС</span>
+        <h2 style="margin-top: 10px;">Как устроен SteppeInvoice</h2>
+        <h3>От создания счета до зачисления средств — 4 понятных шага</h3>
+      </div>
+      <div class="grid-4col">
+        <div class="card">
+          <div class="step-num">1</div>
+          <div class="card-title">Создание счета</div>
+          <div class="card-desc">Указываете название работы, сумму в SOL, адрес кошелька напарника и проценты сплита.</div>
+        </div>
+        <div class="card">
+          <div class="step-num">2</div>
+          <div class="card-title">Отправка ссылки</div>
+          <div class="card-desc">Сервис дает ссылку на чекаут и готовую ссылку Solana Blink для оплаты прямо в ленте X (Twitter) или Telegram.</div>
+        </div>
+        <div class="card">
+          <div class="step-num">3</div>
+          <div class="card-title">Оплата в 1 клик</div>
+          <div class="card-desc">Заказчик подключает свой Phantom/Solflare и подтверждает платеж за 400 миллисекунд.</div>
+        </div>
+        <div class="card">
+          <div class="step-num">4</div>
+          <div class="card-title">Атомарный расчет</div>
+          <div class="card-desc">Смарт-контракт мгновенно начисляет доли на 3 адреса и выдает готовый Акт выполненных работ.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СЛАЙД 4: АВТО-СПЛИТ -->
+    <div class="slide" data-note="Ключевая фишка — авто-сплит в смарт-контракте. Платеж не лежит на сервисе. Контракт в одной транзакции переводит долю напарнику, долю в копилку, а остаток — автору. Если транзакция сорвалась, деньги не спишутся ни у кого.">
+      <div>
+        <span class="badge badge-purple">ЯДРО ТЕХНОЛОГИИ</span>
+        <h2 style="margin-top: 10px;">Атомарный сплит на 3 кошелька</h2>
+        <h3>Смарт-контракт делит входящий платеж в одной транзакции</h3>
+      </div>
+      
+      <div style="margin: 20px 0;">
+        <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono'; font-size: 0.95rem;">
+          <span style="color: var(--solana-emerald);">■ Исполнитель (85%)</span>
+          <span style="color: var(--amber);">■ Копилка / Налоги (10%)</span>
+          <span style="color: var(--steppe-cyan);">■ Напарник (5%)</span>
+        </div>
+        <div class="split-meter">
+          <div class="split-segment seg-creator" style="width: 85%;"></div>
+          <div class="split-segment seg-vault" style="width: 10%;"></div>
+          <div class="split-segment seg-collab" style="width: 5%;"></div>
+        </div>
+      </div>
+
+      <div class="grid-3col">
+        <div class="card" style="border-top: 3px solid var(--solana-emerald);">
+          <div class="card-title">1. Основной исполнитель</div>
+          <div class="card-desc">Получает львиную долю оплаты на свой личный кошелек. Все округления (лампорты) всегда остаются у автора.</div>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--amber);">
+          <div class="card-title">2. Кошелек-копилка (Vault)</div>
+          <div class="card-desc">Автоматически откладывает заданный % (например, на налоги или в накопления) на отдельный безопасный кошелек.</div>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--steppe-cyan);">
+          <div class="card-title">3. Коллаборатор</div>
+          <div class="card-desc">Напарник мгновенно получает свою договоренную долю за дизайн или код без задержек и ручных переводов.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СЛАЙД 5: АКТ ВЫПОЛНЕННЫХ РАБОТ -->
+    <div class="slide" data-note="После оплаты система формирует готовый Акт выполненных работ. В нем есть сумма, реквизиты и главное — QR-код со ссылкой на Solscan, подтверждающий, что расчет действительно произошел в блокчейне.">
+      <div>
+        <span class="badge badge-amber">ЮРИДИЧЕСКАЯ ОПОРА</span>
+        <h2 style="margin-top: 10px;">Акт выполненных работ с QR-печатью</h2>
+        <h3>Первичный документ для отчетности, генерируемый в один клик</h3>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 26px; margin-top: 20px; flex: 1;">
+        <div style="display: flex; flex-direction: column; justify-content: space-around;">
+          <div class="card">
+            <div class="card-title">📋 Официальные реквизиты</div>
+            <div class="card-desc">Указываются данные Исполнителя, Заказчика, дата закрытия и наименование выполненных работ.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">💱 Фиксация курса</div>
+            <div class="card-desc">Автоматически пересчитывает сумму в SOL в эквивалент в тенге (KZT) по живому курсу на момент сделки.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">🔍 Ончейн-печать (Solscan QR)</div>
+            <div class="card-desc">QR-код на документе ведет напрямую на транзакцию в эксплорере Solana, доказывая факт и время оплаты.</div>
+          </div>
+        </div>
+        
+        <div class="act-preview">
+          <div>
+            <div class="act-header">АКТ ВЫПОЛНЕННЫХ РАБОТ № 0084</div>
+            <p style="margin-bottom: 6px;"><b>Исполнитель:</b> Фрилансер (Solana Devnet)</p>
+            <p style="margin-bottom: 6px;"><b>Заказчик:</b> Acme Inc. (Зарубежный клиент)</p>
+            <p style="margin-bottom: 10px;"><b>Предмет:</b> Разработка веб-приложения</p>
+            <div style="background: #F3F4F6; padding: 8px 12px; border-radius: 6px; font-weight: bold; margin-bottom: 10px;">
+              ИТОГО: 1.00 SOL (~75 000 ₸)
+            </div>
+            <p style="color: #059669; font-weight: 700;">✓ ОПЛАЧЕНО В СЕТИ SOLANA (Сплит 3/3 завершен)</p>
+          </div>
+          <div class="qr-box">
+            <div style="width: 58px; height: 58px; background: #000; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; text-align: center; border-radius: 4px;">
+              QR Solscan
+            </div>
+            <div style="font-size: 0.75rem; color: #4B5563;">
+              Отсканируйте для проверки транзакции в Solscan Explorer.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СЛАЙД 6: ЧТО ГОТОВО -->
+    <div class="slide" data-note="Проект полностью рабочий на Devnet: написан смарт-контракт на Rust/Anchor, готов веб-интерфейс, работают Blinks. А чтобы проверить сервис за 20 секунд без установки расширений, на сайте есть страница с 5 встроенными тестовыми кошельками.">
+      <div>
+        <span class="badge badge-solana">РЕАЛИЗОВАННЫЙ ФУНКЦИОНАЛ</span>
+        <h2 style="margin-top: 10px;">Что готово в проекте сегодня?</h2>
+        <h3>Работающий продукт на Solana Devnet без сторонних зависимостей</h3>
+      </div>
+      <div class="grid-2x2">
+        <div class="card" style="border: 1px solid rgba(20, 241, 149, 0.25);">
+          <div class="card-icon">🦀</div>
+          <div class="card-title">Смарт-контракт на Rust (Anchor)</div>
+          <div class="card-desc">Инструкции создания инвойса, атомарной оплаты со сплитом и безопасной отмены инвойса создателем с возвратом ренты.</div>
+        </div>
+        <div class="card" style="border: 1px solid rgba(124, 58, 237, 0.25);">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">Поддержка Solana Blinks & Actions</div>
+          <div class="card-desc">Готовые API-эндпоинты `/api/actions/invoice/...` для моментальной оплаты инвойса прямо из ленты соцсетей.</div>
+        </div>
+        <div class="card" style="border: 1px solid rgba(0, 229, 255, 0.25);">
+          <div class="card-icon">💻</div>
+          <div class="card-title">Веб-приложение на Next.js</div>
+          <div class="card-desc">Удобный интерфейс: страница создания счета, карточка отправки ссылки и экран оплаты для заказчика.</div>
+        </div>
+        <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.25);">
+          <div class="card-icon">🧪</div>
+          <div class="card-title">Встроенный Демо-режим (5 кошельков)</div>
+          <div class="card-desc">Страница `/demo` с готовыми ключами (Фрилансер, Клиенты, Копилка, Напарник). Тестирование полного цикла за 20 секунд без расширений!</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Панель управления -->
+  <div class="controls">
+    <button class="btn-nav" id="prevBtn" title="Назад (Стрелка влево)">←</button>
+    <div class="counter" id="slideCounter">1 / 6</div>
+    <button class="btn-nav" id="nextBtn" title="Вперед (Стрелка вправо / Пробел)">→</button>
+  </div>
+
+  <div class="speaker-drawer" id="toggleNotesBtn">
+    <span>🎙️ Шпаргалка спикера</span>
+  </div>
+
+  <div class="notes-modal" id="notesModal"></div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const counter = document.getElementById('slideCounter');
+    const toggleNotesBtn = document.getElementById('toggleNotesBtn');
+    const notesModal = document.getElementById('notesModal');
+    let current = 0;
+
+    function updateSlide(idx) {
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === idx);
+      });
+      counter.textContent = `${idx + 1} / ${slides.length}`;
+      notesModal.innerHTML = `<b>Подсказка для слайда ${idx + 1}:</b><br>` + slides[idx].getAttribute('data-note');
+    }
+
+    function next() {
+      if (current < slides.length - 1) { current++; updateSlide(current); }
+    }
+    function prev() {
+      if (current > 0) { current--; updateSlide(current); }
+    }
+
+    nextBtn.addEventListener('click', next);
+    prevBtn.addEventListener('click', prev);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { next(); }
+      else if (e.key === 'ArrowLeft') { prev(); }
+      else if (e.key.toLowerCase() === 'n') { notesModal.classList.toggle('show'); }
+    });
+
+    toggleNotesBtn.addEventListener('click', () => {
+      notesModal.classList.toggle('show');
+    });
+
+    updateSlide(0);
+  </script>
+</body>
+</html>
