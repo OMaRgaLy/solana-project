@@ -19,6 +19,7 @@ export interface Translations {
     cancel: string;
     back: string;
     close: string;
+    delete: string;
     sol: string;
     approx: string;
   };
@@ -29,6 +30,7 @@ export interface Translations {
     demoNotice: string;
     switchToLive: string;
     switchToDemo: string;
+    switchWalletText: string;
   };
   home: {
     badge: string;
@@ -64,14 +66,24 @@ export interface Translations {
     amountLabel: string;
     amountHint: string;
     feeNote: string;
+    feeTitle: string;
+    feeDesc: string;
     contractorProfileNotice: string;
     editProfileLink: string;
+    notAuthorizedNotice: string;
+    saveRequisitesPrompt: string;
+    saveRequisitesBtn: string;
     collabSection: string;
     collabCheckbox: string;
+    selectSavedCollab: string;
+    selectSavedCollabPlaceholder: string;
+    orEnterManual: string;
     collabShare: string;
     collabAddr: string;
     collabPlaceholder: string;
     useDemoCollab: string;
+    showCollabInAct: string;
+    showCollabInActHint: string;
     previewTitle: string;
     previewBlink: string;
     previewCheckout: string;
@@ -136,43 +148,75 @@ export interface Translations {
     qrNotice: string;
     printBtn: string;
     switchLangNotice: string;
+    notPaidTitle: string;
+    notPaidDesc: string;
+    goToPayBtn: string;
+    collabInActNotice: string;
   };
   profile: {
     title: string;
     subtitle: string;
+    authWallTitle: string;
+    authWallDesc: string;
+    authWallDemoCta: string;
+    tabAnalytics: string;
+    tabRequisites: string;
+    tabCollaborators: string;
     companyOrName: string;
     companyPlaceholder: string;
     iinBinLabel: string;
-    emailLabel: string;
-    phoneLabel: string;
-    tgLabel: string;
-    walletLabel: string;
+    legalAddressLabel: string;
+    ibanLabel: string;
+    bicLabel: string;
     saveProfileBtn: string;
     savedAlert: string;
+    statTotalInvoiced: string;
+    statNetEarned: string;
+    statCollabPaid: string;
+    statTaxEstimate: string;
+    statSuccessRate: string;
+    addCollabBtn: string;
+    addCollabTitle: string;
+    collabNameLabel: string;
+    collabNamePlaceholder: string;
+    collabWalletLabel: string;
+    collabWalletPlaceholder: string;
+    collabPctLabel: string;
+    collabNoteLabel: string;
+    collabNotePlaceholder: string;
+    noCollabsYet: string;
     myInvoicesTitle: string;
-    grossTotal: string;
-    netTotal: string;
-    invoicesCount: string;
     noInvoices: string;
     cancelBtn: string;
+    collabAddedAlert: string;
+    useInInvoiceBtn: string;
   };
   onboarding: {
     welcomeTitle: string;
     welcomeSubtitle: string;
+    tourTab: string;
+    taxTab: string;
+    splitTab: string;
+    blinksTab: string;
     step1Title: string;
     step1Desc: string;
     step2Title: string;
     step2Desc: string;
     step3Title: string;
     step3Desc: string;
+    step4Title: string;
+    step4Desc: string;
     gotItBtn: string;
-    tipsTitle: string;
-    tipTaxTitle: string;
-    tipTaxDesc: string;
-    tipCollabTitle: string;
-    tipCollabDesc: string;
-    tipBlinkTitle: string;
-    tipBlinkDesc: string;
+    taxTitle: string;
+    taxDesc1: string;
+    taxDesc2: string;
+    taxFormulaTitle: string;
+    splitTitle: string;
+    splitDesc1: string;
+    splitDesc2: string;
+    blinksTitle: string;
+    blinksDesc1: string;
+    blinksDesc2: string;
   };
 }
 
@@ -196,16 +240,18 @@ export const translations: Record<Language, Translations> = {
       cancel: "Отмена",
       back: "Назад",
       close: "Закрыть",
+      delete: "Удалить",
       sol: "SOL",
       approx: "≈",
     },
     header: {
       createInvoice: "Создать инвойс",
-      myProfile: "Реквизиты и Профиль",
+      myProfile: "Личный кабинет",
       howItWorks: "Как это работает",
       demoNotice: "Тестовая сеть Solana Devnet · Виртуальные средства",
       switchToLive: "Включить боевой режим",
       switchToDemo: "Включить демо-режим",
+      switchWalletText: "Переключить тест-кошелек:",
     },
     home: {
       badge: "🇰🇿 Создано для фрилансеров и IT-команд",
@@ -244,17 +290,27 @@ export const translations: Record<Language, Translations> = {
       amountLabel: "Сумма в SOL",
       amountHint: "Курс обновляется в реальном времени:",
       feeNote: "Комиссия протокола SteppeInvoice: 1% (авто-отчисление при оплате)",
+      feeTitle: "⚡ Steppe Protocol Fee (Комиссия сервиса)",
+      feeDesc: "Фиксированная комиссия 1% удерживается смарт-контрактом только в момент успешной оплаты счета. Никаких скрытых платежей.",
       contractorProfileNotice: "Данные исполнителя для Акта:",
       editProfileLink: "Изменить в профиле",
+      notAuthorizedNotice: "Вы не подключили кошелек. Укажите реквизиты исполнителя ниже, а после подключения сможете сохранить их в личный кабинет.",
+      saveRequisitesPrompt: "Сохранить эти данные в профиль для будущих счетов?",
+      saveRequisitesBtn: "Сохранить в профиль",
       collabSection: "🤝 Доля напарника (Коллаборатора)",
       collabCheckbox: "Разделить оплату с напарником (субподрядчиком)",
+      selectSavedCollab: "Выбрать из сохраненных напарников:",
+      selectSavedCollabPlaceholder: "-- Выберите из вашей базы напарников --",
+      orEnterManual: "или указать вручную",
       collabShare: "Доля напарника",
       collabAddr: "Solana-кошелек напарника",
       collabPlaceholder: "Адрес кошелька получателя",
       useDemoCollab: "Вставить адрес Demo-напарника",
+      showCollabInAct: "Указывать напарника в официальном Акте выполненных работ",
+      showCollabInActHint: "Если галочка снята, напарник получит оплату на блокчейне, но в клиентском Акте будете фигурировать только вы как генеральный подрядчик (ИП).",
       previewTitle: "Живой предпросмотр инвойса",
-      previewBlink: "Превью Blink в ленте соцсетей",
-      previewCheckout: "Превью страницы оплаты",
+      previewBlink: "Превью Blink в соцсетях",
+      previewCheckout: "Превью чекаута",
       deployBtn: "Создать инвойс в блокчейне",
       deploying: "Подтверждение в блокчейне...",
       needWallet: "Подключите кошелек для создания",
@@ -270,15 +326,15 @@ export const translations: Record<Language, Translations> = {
       shareTg: "В Telegram",
       shareX: "В Twitter / X",
       shareWa: "В WhatsApp",
-      copyCheckout: "Ссылка на оплату",
-      copyBlink: "Ссылка Blink (dial.to)",
-      copyMessage: "Готовое сообщение со счетом",
+      copyCheckout: "Ссылка на оплату (Чекаут)",
+      copyBlink: "Ссылка Solana Blink (dial.to)",
+      copyMessage: "Готовое сообщение для клиента",
       qrTitle: "Оплата по QR-коду",
       qrHint: "Клиент может отсканировать камерой мобильного кошелька (Phantom, Solflare)",
       waitingPayment: "Ожидание оплаты... Экран обновится автоматически в реальном времени.",
       paidDetected: "🎉 Оплата получена! Сплит успешно выполнен.",
       openAct: "Открыть Акт выполненных работ →",
-      openCheckout: "Открыть страницу оплаты",
+      openCheckout: "Открыть чекаут",
       shareMsgTemplate: (title, amt, url) => `Здравствуйте! Выставляю счет за "${title}" на сумму ${amt} SOL.\nОплатить в 1 клик можно по ссылке:\n${url}`,
     },
     pay: {
@@ -313,43 +369,75 @@ export const translations: Record<Language, Translations> = {
       qrNotice: "Отсканируйте QR-код для верификации криптографической подписи транзакции в Solscan Explorer",
       printBtn: "Распечатать / Сохранить в PDF",
       switchLangNotice: "Язык документа:",
+      notPaidTitle: "Инвойс еще не оплачен",
+      notPaidDesc: "Официальный Акт выполненных работ с QR-печатью формируется автоматически после зачисления оплаты на блокчейне.",
+      goToPayBtn: "Перейти на страницу оплаты →",
+      collabInActNotice: "Привлеченный специалист (Соисполнитель):",
     },
     profile: {
-      title: "Юридический профиль и реквизиты",
-      subtitle: "Данные сохраняются локально и автоматически подставляются в ваши инвойсы и Акты выполненных работ",
+      title: "Личный кабинет исполнителя",
+      subtitle: "Аналитика заработка, реквизиты ИП/ТОО для Актов и база напарников",
+      authWallTitle: "Авторизация через кошелек Solana",
+      authWallDesc: "Подключите ваш кошелек Solana (Phantom, Solflare или Demo), чтобы войти в профиль, просматривать финансовую аналитику, управлять реквизитами ИП и базой напарников.",
+      authWallDemoCta: "⚡ Войти через Demo-кошелек исполнителя",
+      tabAnalytics: "📊 Аналитика и история",
+      tabRequisites: "🏢 Реквизиты ИП / ТОО",
+      tabCollaborators: "👥 База напарников",
       companyOrName: "Название компании / ИП / ФИО исполнителя",
       companyPlaceholder: "Например: ИП Смагулов А.Б. или Nomad Studio",
       iinBinLabel: "ИИН / БИН (12 цифр)",
-      emailLabel: "Контактный Email",
-      phoneLabel: "Номер телефона / WhatsApp",
-      tgLabel: "Telegram никнейм (@username)",
-      walletLabel: "Основной Solana-кошелек",
+      legalAddressLabel: "Юридический адрес",
+      ibanLabel: "Банковский счет IBAN (KZ...)",
+      bicLabel: "БИК Банка",
       saveProfileBtn: "Сохранить реквизиты",
-      savedAlert: "Реквизиты сохранены! Теперь они будут подставляться во все новые инвойсы.",
-      myInvoicesTitle: "История выставленных инвойсов",
-      grossTotal: "Всего выставлено",
-      netTotal: "Получено чистыми",
-      invoicesCount: "Количество инвойсов",
+      savedAlert: "Реквизиты сохранены! Теперь они будут автоматически подставляться в новые инвойсы.",
+      statTotalInvoiced: "Выставлено всего",
+      statNetEarned: "Получено чистыми",
+      statCollabPaid: "Выплачено напарникам",
+      statTaxEstimate: "Налог 3% (ф. 910 РК)",
+      statSuccessRate: "Оплачено счетов",
+      addCollabBtn: "+ Добавить напарника",
+      addCollabTitle: "Добавить напарника в базу",
+      collabNameLabel: "Имя / Роль напарника",
+      collabNamePlaceholder: "Например: Айбек (Senior Frontend) или Алина (UI/UX)",
+      collabWalletLabel: "Solana-кошелек напарника",
+      collabWalletPlaceholder: "Адрес кошелька (Base58)",
+      collabPctLabel: "Доля по умолчанию (%)",
+      collabNoteLabel: "Заметка / Компетенции (опционально)",
+      collabNotePlaceholder: "Разработка смарт-контрактов, дизайн лендингов...",
+      noCollabsYet: "В базе пока нет сохраненных напарников. Добавьте членов команды, чтобы выбирать их в 1 клик при создании инвойса.",
+      myInvoicesTitle: "История выставленных счетов",
       noInvoices: "Вы пока не создали ни одного инвойса.",
       cancelBtn: "Отменить и вернуть ренту",
+      collabAddedAlert: "Напарник успешно добавлен в вашу базу!",
+      useInInvoiceBtn: "Использовать в инвойсе →",
     },
     onboarding: {
-      welcomeTitle: "Добро пожаловать в SteppeInvoice!",
-      welcomeSubtitle: "Платежи в Solana с автоматическим сплитом и бухгалтерскими документами",
-      step1Title: "1. Выставляйте инвойс в SOL",
-      step1Desc: "Указывайте сумму, долю напарника и копилку. Заполненные реквизиты ИП сразу идут в Акт.",
-      step2Title: "2. Отправляйте ссылку в любой мессенджер",
-      step2Desc: "Ссылка превращается в кнопку оплаты в Telegram, WhatsApp или Solana Blink в X (Twitter).",
-      step3Title: "3. Получайте оплату и юридический Акт",
-      step3Desc: "Деньги делятся за 400 мс смарт-контрактом, а вы получаете документ с QR-печатью для налоговой.",
-      gotItBtn: "Понятно, приступить к работе",
-      tipsTitle: "Советы и частые вопросы",
-      tipTaxTitle: "Как отчитываться перед налоговой в РК?",
-      tipTaxDesc: "В Акте выполненных работ фиксируется сумма в тенге по курсу на дату оплаты. QR-код ведет в Solscan, подтверждая факт расчета. Доход декларируется по форме 910 (упрощенка 3%).",
-      tipCollabTitle: "Как работает сплит с напарником?",
-      tipCollabDesc: "Смарт-контракт атомарно делит средства в одной транзакции. Напарник получает свою часть на кошелек моментально.",
-      tipBlinkTitle: "Что такое Solana Blink?",
-      tipBlinkDesc: "Это ссылка, которая прямо в ленте Twitter или Telegram отображает карточку с кнопкой оплаты без перехода на сайт.",
+      welcomeTitle: "Как работает SteppeInvoice",
+      welcomeSubtitle: "Платежи в Solana с автоматическим ончейн-сплитом и официальным Актом",
+      tourTab: "🚀 Пошаговый процесс",
+      taxTab: "🇰🇿 Налоги РК (3% СНР)",
+      splitTab: "🤝 Ончейн-сплит",
+      blinksTab: "⚡ Solana Blinks",
+      step1Title: "1. Создайте счет",
+      step1Desc: "Укажите сумму в SOL и выберите напарника из базы. Ваши реквизиты ИП автоматически попадут в Акт.",
+      step2Title: "2. Отправьте ссылку заказчику",
+      step2Desc: "Ссылка превращается в кнопку оплаты в Telegram, WhatsApp или интерактивный Blink в ленте Twitter (X).",
+      step3Title: "3. Мгновенная ончейн-оплата",
+      step3Desc: "Заказчик подтверждает перевод в Phantom или Solflare. Смарт-контракт делит деньги за 400 мс.",
+      step4Title: "4. Скачайте официальный Акт",
+      step4Desc: "Готовый документ по форме Р-1 с пересчетом в тенге и цифровой QR-печатью для бухгалтерии и налоговой.",
+      gotItBtn: "Понятно, закрыть",
+      taxTitle: "Как отчитываться перед налоговой в Казахстане?",
+      taxDesc1: "Для ИП на специальном налоговом режиме (упрощенка) доход декларируется раз в полугодие по форме 910. Ставка налога составляет 3%.",
+      taxDesc2: "В Акте выполненных работ SteppeInvoice автоматически фиксирует стоимость услуг в тенге по курсу на момент закрытия сделки, а QR-код ведет в Solscan, подтверждая юридический факт и дату расчета.",
+      taxFormulaTitle: "Формула расчета: Оборот (₸) × 3% = Сумма налога к уплате.",
+      splitTitle: "Как работает атомарный ончейн-сплит?",
+      splitDesc1: "Средства клиента не хранятся на балансе нашего сайта: смарт-контракт SteppeInvoice в одной транзакции переводит долю исполнителя, долю напарника и 1% комиссии протокола.",
+      splitDesc2: "Если транзакция не проходит полностью — откатывается вся операция. Напарник гарантированно получает средства без задержек и риска невыплаты.",
+      blinksTitle: "Что такое Solana Actions & Blinks?",
+      blinksDesc1: "Blinks (Blockchain Links) позволяют превратить любую веб-ссылку на инвойс в интерактивный виджет прямо внутри социальной сети X (Twitter) или Telegram.",
+      blinksDesc2: "Клиенту не нужно переходить на сторонние сайты: кнопка 'Оплатить' с выбором суммы отображается прямо в посте.",
     },
   },
 
@@ -372,16 +460,18 @@ export const translations: Record<Language, Translations> = {
       cancel: "Бас тарту",
       back: "Артқа",
       close: "Жабу",
+      delete: "Жою",
       sol: "SOL",
       approx: "≈",
     },
     header: {
       createInvoice: "Шот жасау",
-      myProfile: "Деректемелер мен Профиль",
+      myProfile: "Жеке кабинет",
       howItWorks: "Қалай жұмыс істейді",
       demoNotice: "Solana Devnet сынақ желісі · Виртуалды қаражат",
       switchToLive: "Негізгі режимге өту",
       switchToDemo: "Демо-режимге өту",
+      switchWalletText: "Сынақ әмиянын ауыстыру:",
     },
     home: {
       badge: "🇰🇿 Фрилансерлер мен IT-командалар үшін жасалған",
@@ -420,14 +510,24 @@ export const translations: Record<Language, Translations> = {
       amountLabel: "Сома (SOL)",
       amountHint: "Бағам нақты уақытта жаңартылады:",
       feeNote: "SteppeInvoice хаттама комиссиясы: 1% (төлем кезінде автоматты түрде)",
+      feeTitle: "⚡ Steppe Protocol Fee (Қызмет комиссиясы)",
+      feeDesc: "1% тұрақты комиссия төлем сәтті өткен кезде ғана смарт-келісімшартпен ұсталады. Жасырын төлемдер жоқ.",
       contractorProfileNotice: "Акт үшін орындаушының деректері:",
       editProfileLink: "Профильде өзгерту",
+      notAuthorizedNotice: "Әмиян қосылмаған. Орындаушы деректерін төменде енгізіңіз, кейін әмиянды қосып сақтай аласыз.",
+      saveRequisitesPrompt: "Бұл деректерді алдағы шоттар үшін профильге сақтау керек пе?",
+      saveRequisitesBtn: "Профильге сақтау",
       collabSection: "🤝 Серіктес (Коллаборатор) үлесі",
       collabCheckbox: "Төлемді серіктеспен (қосалқы орындаушымен) бөлісу",
+      selectSavedCollab: "Сақталған серіктестерден таңдау:",
+      selectSavedCollabPlaceholder: "-- Серіктестер базасынан таңдаңыз --",
+      orEnterManual: "немесе қолмен енгізу",
       collabShare: "Серіктес үлесі",
       collabAddr: "Серіктестің Solana әмияны",
       collabPlaceholder: "Қабылдаушы әмиян мекенжайы",
       useDemoCollab: "Demo-серіктес мекенжайын қою",
+      showCollabInAct: "Серіктесті ресми Орындалған жұмыстар актісінде көрсету",
+      showCollabInActHint: "Егер белгі алынып тасталса, серіктес қаражатты блокчейнде алады, бірақ тапсырыс берушінің Актісінде тек сіз көрсетілесіз.",
       previewTitle: "Шотты алдын ала көру",
       previewBlink: "Әлеуметтік желідегі Blink бейнесі",
       previewCheckout: "Төлем парақшасын алдын ала көру",
@@ -446,9 +546,9 @@ export const translations: Record<Language, Translations> = {
       shareTg: "Telegram арқылы",
       shareX: "Twitter / X арқылы",
       shareWa: "WhatsApp арқылы",
-      copyCheckout: "Төлем сілтемесі",
+      copyCheckout: "Төлем сілтемесі (Чекаут)",
       copyBlink: "Blink сілтемесі (dial.to)",
-      copyMessage: "Шот туралы дайын хабарлама",
+      copyMessage: "Клиентке арналған дайын хабарлама",
       qrTitle: "QR-код арқылы төлеу",
       qrHint: "Клиент мобильді әмиян камерасымен сканерлей алады (Phantom, Solflare)",
       waitingPayment: "Төлем күтілуде... Экран нақты уақытта автоматты түрде жаңарады.",
@@ -489,43 +589,75 @@ export const translations: Record<Language, Translations> = {
       qrNotice: "Solscan Explorer-де транзакцияның цифрлық қолтаңбасын тексеру үшін QR-кодты сканерлеңіз",
       printBtn: "Басып шығару / PDF ретінде сақтау",
       switchLangNotice: "Құжат тілі:",
+      notPaidTitle: "Шот әлі төленбеген",
+      notPaidDesc: "QR-мөрі бар ресми Орындалған жұмыстар актісі блокчейнде төлем түскеннен кейін автоматты түрде жасалады.",
+      goToPayBtn: "Төлем парақшасына өту →",
+      collabInActNotice: "Қосалқы орындаушы (Серіктес):",
     },
     profile: {
-      title: "Заңды тұлға профилі мен деректемелер",
-      subtitle: "Деректер жергілікті түрде сақталады және шоттарыңыз бен Орындалған жұмыстар актілеріне автоматты түрде қойылады",
+      title: "Орындаушының жеке кабинеті",
+      subtitle: "Табыс талдауы, Актіге арналған ЖК/ЖШС деректемелері және серіктестер базасы",
+      authWallTitle: "Solana әмияны арқылы кіру",
+      authWallDesc: "Жеке кабинетке кіру, табыс аналитикасын көру, ЖК деректемелерін және серіктестер тізімін басқару үшін Solana әмияныңызды (Phantom, Solflare немесе Demo) қосыңыз.",
+      authWallDemoCta: "⚡ Демо-орындаушы әмиянымен кіру",
+      tabAnalytics: "📊 Талдау және тарих",
+      tabRequisites: "🏢 ЖК / ЖШС деректемелері",
+      tabCollaborators: "👥 Серіктестер базасы",
       companyOrName: "Компания атауы / ЖК / Орындаушының аты-жөні",
       companyPlaceholder: "Мысалы: ЖК Смағұлов А.Б. немесе Nomad Studio",
       iinBinLabel: "ЖСН / БСН (12 сан)",
-      emailLabel: "Байланыс электрондық поштасы",
-      phoneLabel: "Телефон нөмірі / WhatsApp",
-      tgLabel: "Telegram пайдаланушы аты (@username)",
-      walletLabel: "Негізгі Solana әмияны",
+      legalAddressLabel: "Заңды мекенжайы",
+      ibanLabel: "Банк шоты IBAN (KZ...)",
+      bicLabel: "Банктің БИК коды",
       saveProfileBtn: "Деректемелерді сақтау",
-      savedAlert: "Деректемелер сақталды! Енді олар барлық жаңа шоттарға қойылады.",
+      savedAlert: "Деректемелер сақталды! Енді олар барлық жаңа шоттарға автоматты түрде қойылады.",
+      statTotalInvoiced: "Барлық шығарылған",
+      statNetEarned: "Таза түскен табыс",
+      statCollabPaid: "Серіктестерге төленген",
+      statTaxEstimate: "3% Салық (ҚР 910-нысан)",
+      statSuccessRate: "Төленген шоттар",
+      addCollabBtn: "+ Серіктес қосу",
+      addCollabTitle: "Серіктестер базасына қосу",
+      collabNameLabel: "Серіктестің аты / Рөлі",
+      collabNamePlaceholder: "Мысалы: Айбек (Senior Frontend) немесе Алина (UI/UX)",
+      collabWalletLabel: "Серіктестің Solana әмияны",
+      collabWalletPlaceholder: "Әмиян мекенжайы (Base58)",
+      collabPctLabel: "Әдепкі үлесі (%)",
+      collabNoteLabel: "Ескертпе / Бағыты (міндетті емес)",
+      collabNotePlaceholder: "Смарт-келісімшарттар жасау, лендинг дизайны...",
+      noCollabsYet: "Базада әзірге сақталған серіктестер жоқ. Шот жасағанда 1 рет басу арқылы таңдау үшін команда мүшелерін қосыңыз.",
       myInvoicesTitle: "Шығарылған шоттар тарихы",
-      grossTotal: "Барлығы шығарылған",
-      netTotal: "Таза түскен табыс",
-      invoicesCount: "Шоттар саны",
       noInvoices: "Сіз әлі бірде-бір шот жасаған жоқсыз.",
       cancelBtn: "Бас тарту және рентаны қайтару",
+      collabAddedAlert: "Серіктес базаға сәтті қосылды!",
+      useInInvoiceBtn: "Инвойста қолдану →",
     },
     onboarding: {
-      welcomeTitle: "SteppeInvoice-ке қош келдіңіз!",
-      welcomeSubtitle: "Solana-да автоматты бөлу және бухгалтерлік құжаттары бар төлемдер",
-      step1Title: "1. SOL-мен шот ұсыныңыз",
-      step1Desc: "Соманы, серіктес үлесін және қорды көрсетіңіз. Деректер бірден Актіге жазылады.",
-      step2Title: "2. Сілтемені кез келген мессенджерге жіберіңіз",
-      step2Desc: "Сілтеме Telegram, WhatsApp-та немесе X-те Solana Blink-ке айналады.",
-      step3Title: "3. Төлемді және ресми Актіні алыңыз",
-      step3Desc: "Қаражат 400 мс ішінде смарт-келісімшартпен бөлінеді, ал сіз QR-мөрлі Акті аласыз.",
-      gotItBtn: "Түсінікті, жұмысты бастау",
-      tipsTitle: "Кеңестер мен жиі қойылатын сұрақтар",
-      tipTaxTitle: "ҚР салық органдарына қалай есеп беруге болады?",
-      tipTaxDesc: "Орындалған жұмыстар актісінде төлем күніндегі теңгелік сома бекітіледі. QR-код Solscan-ға сілтейді. Табыс 910-нысан бойынша (3% оңайлатылған декларация) декларацияланады.",
-      tipCollabTitle: "Серіктеспен бөлісу қалай жұмыс істейді?",
-      tipCollabDesc: "Смарт-келісімшарт қаражатты бір транзакцияда атомарлы түрде бөледі. Серіктес өз үлесін әмиянына бірден алады.",
-      tipBlinkTitle: "Solana Blink дегеніміз не?",
-      tipBlinkDesc: "Бұл Twitter немесе Telegram арнасында сайтқа кірмей-ақ төлем түймесін көрсететін сілтеме.",
+      welcomeTitle: "SteppeInvoice қалай жұмыс істейді",
+      welcomeSubtitle: "Solana-да автоматты ончейн-бөлу және ресми Актісі бар төлемдер",
+      tourTab: "🚀 Қадамдық процесс",
+      taxTab: "🇰🇿 ҚР Салықтары (3% СНР)",
+      splitTab: "🤝 Ончейн-бөлу",
+      blinksTab: "⚡ Solana Blinks",
+      step1Title: "1. Шот жасаңыз",
+      step1Desc: "SOL сомасын көрсетіңіз және серіктесті базадан таңдаңыз. ЖК деректері бірден Актіге жазылады.",
+      step2Title: "2. Сілтемені тапсырыс берушіге жіберіңіз",
+      step2Desc: "Сілтеме Telegram, WhatsApp-та немесе X (Twitter) арнасында интерактивті Blink түймесіне айналады.",
+      step3Title: "3. Лезде ончейн төлем",
+      step3Desc: "Клиент Phantom немесе Solflare арқылы растайды. Смарт-келісімшарт қаражатты 400 мс ішінде бөледі.",
+      step4Title: "4. Ресми Актіні жүктеңіз",
+      step4Desc: "Бухгалтерия мен салыққа арналған теңгеге шаққандағы және QR-мөрі бар Р-1 нысанындағы дайын құжат.",
+      gotItBtn: "Түсінікті, жабу",
+      taxTitle: "Қазақстанда салық органдарына қалай есеп беруге болады?",
+      taxDesc1: "Арнаулы салық режиміндегі (оңайлатылған декларация) ЖК үшін табыс жарты жылда бір рет 910-нысан бойынша тапсырылады. Салық мөлшерлемесі — 3%.",
+      taxDesc2: "SteppeInvoice Орындалған жұмыстар актісінде төлем күніндегі ресми бағам бойынша теңгелік соманы автоматты түрде бекітеді, ал QR-код Solscan-ға сілтеп, есеп айырысу күнін дәлелдейді.",
+      taxFormulaTitle: "Есептеу формуласы: Айналым (₸) × 3% = Төленетін салық сомасы.",
+      splitTitle: "Атомарлы ончейн-бөлу қалай жұмыс істейді?",
+      splitDesc1: "Тапсырыс берушінің қаражаты сайт балансында сақталмайды: SteppeInvoice смарт-келісімшарты бір транзакцияда орындаушыға, серіктеске және 1% хаттама комиссиясына аударады.",
+      splitDesc2: "Егер қандай да бір бөлік өтпей қалса — бүкіл транзакция тоқтатылады. Серіктес өз үлесін кідіріссіз және тәуекелсіз алады.",
+      blinksTitle: "Solana Actions & Blinks дегеніміз не?",
+      blinksDesc1: "Blinks (Blockchain Links) кез келген инвойс сілтемесін X (Twitter) немесе Telegram ішінде интерактивті виджетке айналдырады.",
+      blinksDesc2: "Тапсырыс берушіге бөтен сайтқа өтудің қажеті жоқ: төлем түймесі тікелей жазбаның ішінде көрінеді.",
     },
   },
 
@@ -548,16 +680,18 @@ export const translations: Record<Language, Translations> = {
       cancel: "Cancel",
       back: "Back",
       close: "Close",
+      delete: "Delete",
       sol: "SOL",
       approx: "≈",
     },
     header: {
       createInvoice: "Create Invoice",
-      myProfile: "Business Profile",
+      myProfile: "Dashboard",
       howItWorks: "How it works",
       demoNotice: "Solana Devnet Test Network · Virtual Test SOL",
       switchToLive: "Switch to Live Mode",
       switchToDemo: "Switch to Demo Mode",
+      switchWalletText: "Switch test wallet:",
     },
     home: {
       badge: "🇰🇿 Built for Central Asian Freelancers & Global Teams",
@@ -596,14 +730,24 @@ export const translations: Record<Language, Translations> = {
       amountLabel: "Amount in SOL",
       amountHint: "Live indicative exchange rate:",
       feeNote: "SteppeInvoice Protocol Fee: 1% (settled atomically upon payment)",
+      feeTitle: "⚡ Steppe Protocol Fee",
+      feeDesc: "Fixed 1% protocol fee settled atomically by the smart contract only upon successful payment. Zero hidden charges.",
       contractorProfileNotice: "Contractor info for the legal Act:",
       editProfileLink: "Edit in profile",
+      notAuthorizedNotice: "Wallet not connected. Enter contractor details below; you can save them to your profile once connected.",
+      saveRequisitesPrompt: "Save these details to your profile for future invoices?",
+      saveRequisitesBtn: "Save to Profile",
       collabSection: "🤝 Collaborator Split",
       collabCheckbox: "Split payment with a collaborator (team member / dev)",
+      selectSavedCollab: "Select from saved collaborators:",
+      selectSavedCollabPlaceholder: "-- Choose from your collaborators directory --",
+      orEnterManual: "or enter manually",
       collabShare: "Collaborator share",
       collabAddr: "Collaborator Solana wallet address",
       collabPlaceholder: "Recipient Solana public key",
       useDemoCollab: "Insert Demo Collaborator address",
+      showCollabInAct: "Include collaborator in the official Act of Completed Works",
+      showCollabInActHint: "If unchecked, the collaborator receives their share on-chain, but the client-facing legal Act will only list you as the primary contractor.",
       previewTitle: "Live Invoice Preview",
       previewBlink: "Blink Social Preview",
       previewCheckout: "Checkout Page Preview",
@@ -665,43 +809,75 @@ export const translations: Record<Language, Translations> = {
       qrNotice: "Scan QR code to verify the cryptographic settlement transaction on Solscan Explorer",
       printBtn: "Print / Save as PDF",
       switchLangNotice: "Document language:",
+      notPaidTitle: "Invoice Not Paid Yet",
+      notPaidDesc: "The official Certificate of Completion with QR seal will be generated automatically once payment is confirmed on-chain.",
+      goToPayBtn: "Go to Payment Page →",
+      collabInActNotice: "Subcontractor / Collaborator:",
     },
     profile: {
-      title: "Business Profile & Requisites",
-      subtitle: "Saved locally and automatically prefilled into your invoices and legal Acts of Works",
+      title: "Contractor Dashboard",
+      subtitle: "Earnings analytics, legal requisites for Acts, and team collaborator directory",
+      authWallTitle: "Sign in with Solana Wallet",
+      authWallDesc: "Connect your Solana wallet (Phantom, Solflare or Demo) to access your dashboard, view earnings analytics, and manage company requisites and saved team members.",
+      authWallDemoCta: "⚡ Sign in with Demo Freelancer Wallet",
+      tabAnalytics: "📊 Analytics & History",
+      tabRequisites: "🏢 Company Requisites",
+      tabCollaborators: "👥 Collaborators Directory",
       companyOrName: "Company / Sole Proprietorship / Full Name",
       companyPlaceholder: "e.g.: Nomad Tech Studio or Smagulov A.B.",
       iinBinLabel: "Tax ID / IIN / BIN (12 digits)",
-      emailLabel: "Contact Email",
-      phoneLabel: "Phone / WhatsApp",
-      tgLabel: "Telegram Username (@handle)",
-      walletLabel: "Primary Payout Wallet",
-      saveProfileBtn: "Save Profile",
-      savedAlert: "Profile saved! These details will automatically appear on new invoices and Acts.",
+      legalAddressLabel: "Legal Registered Address",
+      ibanLabel: "Bank Account IBAN (KZ...)",
+      bicLabel: "Bank BIC / SWIFT",
+      saveProfileBtn: "Save Requisites",
+      savedAlert: "Requisites saved! These details will automatically appear on new invoices and Acts.",
+      statTotalInvoiced: "Total Invoiced",
+      statNetEarned: "Net Revenue",
+      statCollabPaid: "Paid to Team",
+      statTaxEstimate: "3% Tax (KZ Form 910)",
+      statSuccessRate: "Paid Invoices",
+      addCollabBtn: "+ Add Collaborator",
+      addCollabTitle: "Add Collaborator to Directory",
+      collabNameLabel: "Collaborator Name / Role",
+      collabNamePlaceholder: "e.g.: Aibek (Senior Frontend) or Alina (UI/UX)",
+      collabWalletLabel: "Collaborator Solana Wallet",
+      collabWalletPlaceholder: "Solana wallet public key (Base58)",
+      collabPctLabel: "Default Share (%)",
+      collabNoteLabel: "Notes / Competencies (optional)",
+      collabNotePlaceholder: "Smart contract development, landing page design...",
+      noCollabsYet: "No saved collaborators yet. Add your teammates to select them in 1 click during invoice creation.",
       myInvoicesTitle: "Invoice History",
-      grossTotal: "Total Invoiced",
-      netTotal: "Net Received",
-      invoicesCount: "Invoices Count",
       noInvoices: "You have not created any invoices yet.",
       cancelBtn: "Cancel and reclaim rent",
+      collabAddedAlert: "Collaborator added successfully to your directory!",
+      useInInvoiceBtn: "Use in Invoice →",
     },
     onboarding: {
-      welcomeTitle: "Welcome to SteppeInvoice!",
+      welcomeTitle: "How SteppeInvoice Works",
       welcomeSubtitle: "Solana payments with instant atomic split and official accounting paperwork",
-      step1Title: "1. Create an invoice in SOL",
-      step1Desc: "Enter the amount and collaborator share. Contractor details automatically prefill the Act.",
-      step2Title: "2. Send link anywhere",
-      step2Desc: "The link works in Telegram, WhatsApp, or as a native Solana Blink inside X (Twitter).",
-      step3Title: "3. Get paid & download the Act",
-      step3Desc: "Funds split atomically in 400ms, and you get an official printable Act sealed with Solscan QR.",
-      gotItBtn: "Got it, let's start",
-      tipsTitle: "Guides & FAQ",
-      tipTaxTitle: "How to declare income in Kazakhstan?",
-      tipTaxDesc: "The Act records the KZT equivalent at the settlement timestamp. The QR verifies on-chain payment. Declare income under form 910 (3% simplified tax regime).",
-      tipCollabTitle: "How does the collaborator split work?",
-      tipCollabDesc: "The smart contract executes transfers in the exact same transaction. The collaborator receives their share instantly with zero trust issues.",
-      tipBlinkTitle: "What is a Solana Blink?",
-      tipBlinkDesc: "Blinks allow users to execute on-chain transactions directly from feed cards on X or Telegram without leaving the platform.",
+      tourTab: "🚀 Step-by-Step Flow",
+      taxTab: "🇰🇿 KZ Taxes (3% Simplified)",
+      splitTab: "🤝 On-Chain Split",
+      blinksTab: "⚡ Solana Blinks",
+      step1Title: "1. Create an invoice",
+      step1Desc: "Specify amount in SOL and select a collaborator. Your company requisites prefill the Act automatically.",
+      step2Title: "2. Share link anywhere",
+      step2Desc: "The link turns into a 1-click pay button in Telegram, WhatsApp, or interactive Blink in X (Twitter).",
+      step3Title: "3. Instant on-chain payment",
+      step3Desc: "Client approves in Phantom or Solflare. The smart contract splits funds in 400ms.",
+      step4Title: "4. Download official Act",
+      step4Desc: "Printable Form R-1 Certificate of Completion with fiat rate and cryptographic QR seal for tax reporting.",
+      gotItBtn: "Got it, close",
+      taxTitle: "How to declare income in Kazakhstan?",
+      taxDesc1: "For Sole Proprietorships (ИП) under the simplified tax regime, income is reported semi-annually on Form 910 with a flat 3% tax rate.",
+      taxDesc2: "SteppeInvoice records the KZT equivalent in the Act of Completed Works based on the rate at transaction time. The QR code links directly to Solscan, verifying cryptographic proof of payment.",
+      taxFormulaTitle: "Calculation Formula: Turnover (₸) × 3% = Payable Tax.",
+      splitTitle: "How does the atomic on-chain split work?",
+      splitDesc1: "Funds never sit on our servers: the SteppeInvoice smart contract splits creator share, collaborator share, and 1% protocol fee in one block.",
+      splitDesc2: "If any part fails, the entire transaction is reverted. Your teammates get paid instantly with zero custody risk.",
+      blinksTitle: "What are Solana Actions & Blinks?",
+      blinksDesc1: "Blinks (Blockchain Links) render actionable payment buttons directly inside X (Twitter) or Telegram feeds without redirecting to external websites.",
+      blinksDesc2: "Clients can execute the payment transaction right from their social media feed in one click.",
     },
   },
 };

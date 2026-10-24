@@ -11,26 +11,49 @@ import { useProfile } from "@/lib/profile/ProfileContext";
 
 type Rate = { kzt: number; usd: number; source: string; fallback: boolean };
 
-const fmtKzt = (n: number) => new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(n);
-const fmtDateRu = (ts: number) => new Date(ts * 1000).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" });
-const fmtDateKk = (ts: number) => new Date(ts * 1000).toLocaleDateString("kk-KZ", { day: "2-digit", month: "long", year: "numeric" });
-const fmtDateEn = (ts: number) => new Date(ts * 1000).toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" });
+const fmtKzt = (n: number) =>
+  new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(n);
+const fmtDateRu = (ts: number) =>
+  new Date(ts * 1000).toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+const fmtDateKk = (ts: number) =>
+  new Date(ts * 1000).toLocaleDateString("kk-KZ", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+const fmtDateEn = (ts: number) =>
+  new Date(ts * 1000).toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 
-export default function ActPage({ params }: { params: Promise<{ creator: string; id: string }> }) {
+export default function ActPage({
+  params,
+}: {
+  params: Promise<{ creator: string; id: string }>;
+}) {
   const { creator, id } = use(params);
-  const { lang: globalLang } = useI18n();
+  const { lang: globalLang, t } = useI18n();
   const { profile } = useProfile();
   const { invoice, loading, error, paySig } = useInvoice(creator, id);
 
-  // The Act language defaults to the user's active site language!
   const [docLang, setDocLang] = useState<Language>(globalLang);
   const [rate, setRate] = useState<Rate | null>(null);
   const [qr, setQr] = useState<string | null>(null);
 
-  // Requisites (prefilled from profile)
+  // Requisites
   const [contractor, setContractor] = useState(profile.companyOrName || "ИП Смагулов А.Б.");
   const [iin, setIin] = useState(profile.iinBin || "940512301824");
   const [customer, setCustomer] = useState("Acme Inc. (USA)");
+
+  // Collaborator in Act settings
+  const [collabInAct, setCollabInAct] = useState(false);
+  const [collabName, setCollabName] = useState("");
 
   useEffect(() => {
     setDocLang(globalLang);
@@ -47,9 +70,31 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
       .then(setRate)
       .catch(() => setRate({ kzt: 75000, usd: 150, source: "approximate", fallback: true }));
 
-    const q = new URLSearchParams(window.location.search).get("client");
-    if (q) setCustomer(q);
-  }, []);
+    // Read URL query params
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search);
+      const qClient = q.get("client");
+      if (qClient) setCustomer(qClient);
+
+      const qCollabInAct = q.get("collabInAct");
+      if (qCollabInAct === "1") setCollabInAct(true);
+
+      // Try reading local storage invoice metadata
+      try {
+        const savedMeta = localStorage.getItem(`steppe_inv_meta_${id}`);
+        if (savedMeta) {
+          const parsed = JSON.parse(savedMeta);
+          if (parsed.client) setCustomer(parsed.client);
+          if (parsed.contractorName) setContractor(parsed.contractorName);
+          if (parsed.contractorIin) setIin(parsed.contractorIin);
+          if (parsed.collabInAct !== undefined) setCollabInAct(Boolean(parsed.collabInAct));
+          if (parsed.collabName) setCollabName(parsed.collabName);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!paySig) return;
@@ -58,20 +103,18 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
       .catch(() => setQr(null));
   }, [paySig]);
 
-  if (loading && !invoice) return <p className="text-slate-400">Загрузка данных инвойса...</p>;
-  if (error) return <p className="text-red-400">{error}</p>;
-  if (!invoice) return <p className="text-slate-400">Инвойс не найден.</p>;
+  if (loading && !invoice) return <p className="text-slate-400 p-6">{t.common.loading}</p>;
+  if (error) return <p className="text-red-400 p-6">{error}</p>;
+  if (!invoice) return <p className="text-slate-400 p-6">{t.act.notPaidTitle}</p>;
 
   if (!invoice.isPaid) {
     return (
       <div className="card mx-auto max-w-lg text-center py-10 space-y-4">
         <div className="text-3xl">⏳</div>
-        <h1 className="text-lg font-bold text-white">Инвойс еще не оплачен</h1>
-        <p className="text-slate-400 text-xs">
-          Официальный Акт выполненных работ с QR-печатью формируется автоматически после зачисления оплаты на блокчейне.
-        </p>
-        <Link className="btn text-xs py-2 px-4" href={`/pay/${creator}/${id}`}>
-          Перейти на страницу оплаты →
+        <h1 className="text-lg font-bold text-white">{t.act.notPaidTitle}</h1>
+        <p className="text-slate-400 text-xs">{t.act.notPaidDesc}</p>
+        <Link className="btn text-xs py-2 px-5 inline-block" href={`/pay/${creator}/${id}`}>
+          {t.act.goToPayBtn}
         </Link>
       </div>
     );
@@ -81,6 +124,8 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
   const kzt = rate ? solAmount * rate.kzt : null;
   const num = `${id.slice(-6)}`;
   const timestamp = invoice.paidAt ?? invoice.createdAt;
+  const hasCollaborator = Boolean(invoice.collaborator) && invoice.collaboratorBps > 0;
+  const collabPct = invoice.collaboratorBps / 100;
 
   return (
     <div className="space-y-6">
@@ -88,28 +133,37 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
       <div className="no-print card space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">Язык документа:</span>
+            <span className="text-xs text-slate-400">{t.act.switchLangNotice}</span>
             <div className="flex rounded-lg bg-black/40 p-1 border border-white/10 text-xs font-semibold">
               <button
+                id="btn-act-lang-kk"
                 onClick={() => setDocLang("kk")}
                 className={`px-3 py-1 rounded-md transition-all ${
-                  docLang === "kk" ? "bg-teal-400 text-slate-950 font-bold shadow" : "text-slate-400 hover:text-white"
+                  docLang === "kk"
+                    ? "bg-teal-400 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 🇰🇿 Қазақша
               </button>
               <button
+                id="btn-act-lang-ru"
                 onClick={() => setDocLang("ru")}
                 className={`px-3 py-1 rounded-md transition-all ${
-                  docLang === "ru" ? "bg-teal-400 text-slate-950 font-bold shadow" : "text-slate-400 hover:text-white"
+                  docLang === "ru"
+                    ? "bg-teal-400 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 🇷🇺 Русский
               </button>
               <button
+                id="btn-act-lang-en"
                 onClick={() => setDocLang("en")}
                 className={`px-3 py-1 rounded-md transition-all ${
-                  docLang === "en" ? "bg-teal-400 text-slate-950 font-bold shadow" : "text-slate-400 hover:text-white"
+                  docLang === "en"
+                    ? "bg-teal-400 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 🇬🇧 English
@@ -117,18 +171,46 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
             </div>
           </div>
 
-          <button
-            onClick={() => window.print()}
-            className="btn py-2 px-5 text-xs font-bold shadow-lg"
-          >
-            📄 Скачать Акт / Печать в PDF
-          </button>
+          <div className="flex items-center gap-3">
+            {hasCollaborator && (
+              <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input
+                  id="checkbox-act-collab"
+                  type="checkbox"
+                  checked={collabInAct}
+                  onChange={(e) => setCollabInAct(e.target.checked)}
+                  className="rounded accent-teal-400 h-3.5 w-3.5"
+                />
+                <span>
+                  {docLang === "kk"
+                    ? "Серіктесті Актіде көрсету"
+                    : docLang === "en"
+                    ? "Show collaborator in Act"
+                    : "Указывать напарника в Акте"}
+                </span>
+              </label>
+            )}
+
+            <button
+              id="btn-print-act"
+              onClick={() => window.print()}
+              className="btn py-2 px-5 text-xs font-bold shadow-lg"
+            >
+              📄 {t.act.printBtn}
+            </button>
+          </div>
         </div>
 
         {/* Quick Edit Requisites */}
         <div className="grid gap-3 sm:grid-cols-3 text-xs">
           <div>
-            <label className="label">Исполнитель (Компания / ИП / ФИО)</label>
+            <label className="label">
+              {docLang === "kk"
+                ? "Орындаушы (Компания / ЖК / Аты-жөні)"
+                : docLang === "en"
+                ? "Contractor (Company / Name)"
+                : "Исполнитель (Компания / ИП / ФИО)"}
+            </label>
             <input
               className="input text-xs"
               value={contractor}
@@ -136,7 +218,13 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
             />
           </div>
           <div>
-            <label className="label">ИИН / БИН исполнителя</label>
+            <label className="label">
+              {docLang === "kk"
+                ? "Орындаушының ЖСН / БСН"
+                : docLang === "en"
+                ? "Tax ID / BIN of Contractor"
+                : "ИИН / БИН исполнителя"}
+            </label>
             <input
               className="input font-mono text-xs"
               value={iin}
@@ -144,7 +232,13 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
             />
           </div>
           <div>
-            <label className="label">Заказчик (Клиент)</label>
+            <label className="label">
+              {docLang === "kk"
+                ? "Тапсырыс беруші (Клиент)"
+                : docLang === "en"
+                ? "Customer (Client)"
+                : "Заказчик (Клиент)"}
+            </label>
             <input
               className="input text-xs"
               value={customer}
@@ -174,12 +268,22 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
             <div className="space-y-2 border-y border-neutral-300 py-3 text-xs">
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Орындаушы:</span>
-                <span>{contractor} (ЖСН/БСН: {iin})</span>
+                <span>
+                  {contractor} (ЖСН/БСН: {iin})
+                </span>
               </div>
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Тапсырыс беруші:</span>
                 <span>{customer}</span>
               </div>
+              {hasCollaborator && collabInAct && (
+                <div className="flex">
+                  <span className="w-36 font-bold text-neutral-800">Қосалқы орындаушы:</span>
+                  <span>
+                    {collabName || invoice.collaborator?.toBase58()} (Үлесі: {collabPct}%)
+                  </span>
+                </div>
+              )}
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Есеп айырысу желісі:</span>
                 <span className="font-mono">Solana Blockchain (Смарт-келісімшарт SteppeInvoice)</span>
@@ -190,7 +294,9 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
               <thead>
                 <tr className="bg-neutral-100 text-neutral-800">
                   <th className="border border-neutral-400 p-2 text-center w-12">№</th>
-                  <th className="border border-neutral-400 p-2 text-left">Орындалған жұмыстардың (қызметтердің) атауы</th>
+                  <th className="border border-neutral-400 p-2 text-left">
+                    Орындалған жұмыстардың (қызметтердің) атауы
+                  </th>
                   <th className="border border-neutral-400 p-2 text-right w-28">Сомасы (SOL)</th>
                   <th className="border border-neutral-400 p-2 text-right w-32">Баламасы (KZT)</th>
                 </tr>
@@ -198,22 +304,41 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
               <tbody>
                 <tr>
                   <td className="border border-neutral-400 p-2 text-center">1</td>
-                  <td className="border border-neutral-400 p-2 font-medium">{invoice.title}</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono font-bold">{lamportsToSol(invoice.amount)} SOL</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{kzt ? `${fmtKzt(kzt)} ₸` : "—"}</td>
+                  <td className="border border-neutral-400 p-2 font-medium">
+                    {invoice.title}
+                    {hasCollaborator && collabInAct && (
+                      <div className="text-[11px] text-neutral-600 mt-0.5">
+                        • Қосалқы орындаушы: {collabName || invoice.collaborator?.toBase58()} ({collabPct}%)
+                      </div>
+                    )}
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono font-bold">
+                    {lamportsToSol(invoice.amount)} SOL
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {kzt ? `${fmtKzt(kzt)} ₸` : "—"}
+                  </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr className="font-bold bg-neutral-50">
-                  <td colSpan={2} className="border border-neutral-400 p-2 text-right">Жиыны (ҚҚС-сыз):</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{lamportsToSol(invoice.amount)} SOL</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{kzt ? `${fmtKzt(kzt)} ₸` : "—"}</td>
+                  <td colSpan={2} className="border border-neutral-400 p-2 text-right">
+                    Жиыны (ҚҚС-сыз):
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {lamportsToSol(invoice.amount)} SOL
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {kzt ? `${fmtKzt(kzt)} ₸` : "—"}
+                  </td>
                 </tr>
               </tfoot>
             </table>
 
             <p className="text-xs text-neutral-700">
-              Жоғарыда аталған жұмыстар (қызметтер) толық көлемде және уақытында орындалды. Тапсырыс берушінің жұмыстардың (қызметтердің) көлемі, сапасы мен мерзімдері бойынша шағымдары жоқ.
+              Жоғарыда аталған жұмыстар (қызметтер) толық көлемде және уақытында орындалды. Тапсырыс
+              берушінің жұмыстардың (қызметтердің) көлемі, сапасы мен мерзімдері бойынша шағымдары
+              жоқ.
             </p>
 
             <div className="grid grid-cols-2 gap-8 pt-4 text-xs">
@@ -233,11 +358,18 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
 
             {/* QR Seal */}
             <div className="mt-6 flex items-center gap-4 rounded border border-neutral-300 bg-neutral-50 p-4 text-xs">
-              {qr ? <img src={qr} alt="Solscan QR" className="h-24 w-24 border border-neutral-300" /> : <div className="h-24 w-24 bg-neutral-200" />}
+              {qr ? (
+                <img src={qr} alt="Solscan QR" className="h-24 w-24 border border-neutral-300" />
+              ) : (
+                <div className="h-24 w-24 bg-neutral-200" />
+              )}
               <div className="space-y-1">
-                <div className="font-bold text-neutral-800">✓ БЛОКЧЕЙНДЕГІ САНДЫҚ МӨР (SOLSCAN ЭКСПЛОРЕРІ)</div>
+                <div className="font-bold text-neutral-800">
+                  ✓ БЛОКЧЕЙНДЕГІ САНДЫҚ МӨР (SOLSCAN ЭКСПЛОРЕРІ)
+                </div>
                 <p className="text-[11px] text-neutral-600">
-                  Мәміле Solana блокчейнінде орындалды. QR-кодты сканерлеу арқылы Solscan-да транзакцияны тексеруге болады:
+                  Мәміле Solana блокчейнінде орындалды. QR-кодты сканерлеу арқылы Solscan-да
+                  транзакцияны тексеруге болады:
                 </p>
                 {paySig && (
                   <p className="font-mono text-[10px] text-neutral-500 break-all">{paySig}</p>
@@ -263,12 +395,22 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
             <div className="space-y-2 border-y border-neutral-300 py-3 text-xs">
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Contractor:</span>
-                <span>{contractor} (Tax ID / BIN: {iin})</span>
+                <span>
+                  {contractor} (Tax ID / BIN: {iin})
+                </span>
               </div>
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Customer:</span>
                 <span>{customer}</span>
               </div>
+              {hasCollaborator && collabInAct && (
+                <div className="flex">
+                  <span className="w-36 font-bold text-neutral-800">Subcontractor:</span>
+                  <span>
+                    {collabName || invoice.collaborator?.toBase58()} (Share: {collabPct}%)
+                  </span>
+                </div>
+              )}
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Settlement Network:</span>
                 <span className="font-mono">Solana Blockchain (SteppeInvoice Protocol)</span>
@@ -279,7 +421,9 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
               <thead>
                 <tr className="bg-neutral-100 text-neutral-800">
                   <th className="border border-neutral-400 p-2 text-center w-12">#</th>
-                  <th className="border border-neutral-400 p-2 text-left">Description of Services Delivered</th>
+                  <th className="border border-neutral-400 p-2 text-left">
+                    Description of Services Delivered
+                  </th>
                   <th className="border border-neutral-400 p-2 text-right w-28">Amount (SOL)</th>
                   <th className="border border-neutral-400 p-2 text-right w-32">Equivalent (KZT)</th>
                 </tr>
@@ -287,46 +431,79 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
               <tbody>
                 <tr>
                   <td className="border border-neutral-400 p-2 text-center">1</td>
-                  <td className="border border-neutral-400 p-2 font-medium">{invoice.title}</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono font-bold">{lamportsToSol(invoice.amount)} SOL</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{kzt ? `${fmtKzt(kzt)} ₸` : "—"}</td>
+                  <td className="border border-neutral-400 p-2 font-medium">
+                    {invoice.title}
+                    {hasCollaborator && collabInAct && (
+                      <div className="text-[11px] text-neutral-600 mt-0.5">
+                        • Subcontractor: {collabName || invoice.collaborator?.toBase58()} ({collabPct}%)
+                      </div>
+                    )}
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono font-bold">
+                    {lamportsToSol(invoice.amount)} SOL
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {kzt ? `${fmtKzt(kzt)} ₸` : "—"}
+                  </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr className="font-bold bg-neutral-50">
-                  <td colSpan={2} className="border border-neutral-400 p-2 text-right">TOTAL:</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{lamportsToSol(invoice.amount)} SOL</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{kzt ? `${fmtKzt(kzt)} ₸` : "—"}</td>
+                  <td colSpan={2} className="border border-neutral-400 p-2 text-right">
+                    TOTAL:
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {lamportsToSol(invoice.amount)} SOL
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {kzt ? `${fmtKzt(kzt)} ₸` : "—"}
+                  </td>
                 </tr>
               </tfoot>
             </table>
 
             <p className="text-xs text-neutral-700">
-              The services described above have been fully delivered and accepted. The Customer has no claims regarding the quality, scope, or delivery timeline.
+              The services described above have been fully delivered and accepted. The Customer has
+              no claims regarding the quality, scope, or delivery timeline.
             </p>
 
             <div className="grid grid-cols-2 gap-8 pt-4 text-xs">
               <div>
-                <div className="font-bold border-b border-black pb-1 mb-2">Delivered by (Contractor):</div>
+                <div className="font-bold border-b border-black pb-1 mb-2">
+                  Delivered by (Contractor):
+                </div>
                 <p>{contractor}</p>
                 <p className="font-mono text-[11px] text-neutral-600 mt-1">Tax ID: {iin}</p>
-                <div className="mt-8 text-[11px] text-neutral-500">Signature: ________________ / Seal</div>
+                <div className="mt-8 text-[11px] text-neutral-500">
+                  Signature: ________________ / Seal
+                </div>
               </div>
 
               <div>
-                <div className="font-bold border-b border-black pb-1 mb-2">Accepted by (Customer):</div>
+                <div className="font-bold border-b border-black pb-1 mb-2">
+                  Accepted by (Customer):
+                </div>
                 <p>{customer}</p>
-                <div className="mt-8 text-[11px] text-neutral-500">Signature: ________________ / Seal</div>
+                <div className="mt-8 text-[11px] text-neutral-500">
+                  Signature: ________________ / Seal
+                </div>
               </div>
             </div>
 
             {/* QR Seal */}
             <div className="mt-6 flex items-center gap-4 rounded border border-neutral-300 bg-neutral-50 p-4 text-xs">
-              {qr ? <img src={qr} alt="Solscan QR" className="h-24 w-24 border border-neutral-300" /> : <div className="h-24 w-24 bg-neutral-200" />}
+              {qr ? (
+                <img src={qr} alt="Solscan QR" className="h-24 w-24 border border-neutral-300" />
+              ) : (
+                <div className="h-24 w-24 bg-neutral-200" />
+              )}
               <div className="space-y-1">
-                <div className="font-bold text-neutral-800">✓ ON-CHAIN CRYPTOGRAPHIC SEAL (SOLSCAN EXPLORER)</div>
+                <div className="font-bold text-neutral-800">
+                  ✓ ON-CHAIN CRYPTOGRAPHIC SEAL (SOLSCAN EXPLORER)
+                </div>
                 <p className="text-[11px] text-neutral-600">
-                  Cryptographic transaction settled on Solana blockchain. Scan the QR code to verify settlement authenticity:
+                  Cryptographic transaction settled on Solana blockchain. Scan the QR code to verify
+                  settlement authenticity:
                 </p>
                 {paySig && (
                   <p className="font-mono text-[10px] text-neutral-500 break-all">{paySig}</p>
@@ -352,12 +529,22 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
             <div className="space-y-2 border-y border-neutral-300 py-3 text-xs">
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Исполнитель:</span>
-                <span>{contractor} (ИИН/БИН: {iin})</span>
+                <span>
+                  {contractor} (ИИН/БИН: {iin})
+                </span>
               </div>
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Заказчик:</span>
                 <span>{customer}</span>
               </div>
+              {hasCollaborator && collabInAct && (
+                <div className="flex">
+                  <span className="w-36 font-bold text-neutral-800">Соисполнитель:</span>
+                  <span>
+                    {collabName || invoice.collaborator?.toBase58()} (Доля: {collabPct}%)
+                  </span>
+                </div>
+              )}
               <div className="flex">
                 <span className="w-36 font-bold text-neutral-800">Сеть расчета:</span>
                 <span className="font-mono">Solana Blockchain (Смарт-контракт SteppeInvoice)</span>
@@ -368,7 +555,9 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
               <thead>
                 <tr className="bg-neutral-100 text-neutral-800">
                   <th className="border border-neutral-400 p-2 text-center w-12">№</th>
-                  <th className="border border-neutral-400 p-2 text-left">Наименование выполненных работ (оказанных услуг)</th>
+                  <th className="border border-neutral-400 p-2 text-left">
+                    Наименование выполненных работ (оказанных услуг)
+                  </th>
                   <th className="border border-neutral-400 p-2 text-right w-28">Сумма (SOL)</th>
                   <th className="border border-neutral-400 p-2 text-right w-32">Эквивалент (KZT)</th>
                 </tr>
@@ -376,46 +565,77 @@ export default function ActPage({ params }: { params: Promise<{ creator: string;
               <tbody>
                 <tr>
                   <td className="border border-neutral-400 p-2 text-center">1</td>
-                  <td className="border border-neutral-400 p-2 font-medium">{invoice.title}</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono font-bold">{lamportsToSol(invoice.amount)} SOL</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{kzt ? `${fmtKzt(kzt)} ₸` : "—"}</td>
+                  <td className="border border-neutral-400 p-2 font-medium">
+                    {invoice.title}
+                    {hasCollaborator && collabInAct && (
+                      <div className="text-[11px] text-neutral-600 mt-0.5">
+                        • Соисполнитель: {collabName || invoice.collaborator?.toBase58()} ({collabPct}%)
+                      </div>
+                    )}
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono font-bold">
+                    {lamportsToSol(invoice.amount)} SOL
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {kzt ? `${fmtKzt(kzt)} ₸` : "—"}
+                  </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr className="font-bold bg-neutral-50">
-                  <td colSpan={2} className="border border-neutral-400 p-2 text-right">ИТОГО (без НДС):</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{lamportsToSol(invoice.amount)} SOL</td>
-                  <td className="border border-neutral-400 p-2 text-right font-mono">{kzt ? `${fmtKzt(kzt)} ₸` : "—"}</td>
+                  <td colSpan={2} className="border border-neutral-400 p-2 text-right">
+                    ИТОГО (без НДС):
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {lamportsToSol(invoice.amount)} SOL
+                  </td>
+                  <td className="border border-neutral-400 p-2 text-right font-mono">
+                    {kzt ? `${fmtKzt(kzt)} ₸` : "—"}
+                  </td>
                 </tr>
               </tfoot>
             </table>
 
             <p className="text-xs text-neutral-700">
-              Сведения об использовании запасов: не использовались. Вышеперечисленные работы (услуги) выполнены полностью и в срок. Заказчик претензий по объему, качеству и срокам не имеет.
+              Сведения об использовании запасов: не использовались. Вышеперечисленные работы (услуги)
+              выполнены полностью и в срок. Заказчик претензий по объему, качеству и срокам не имеет.
             </p>
 
             <div className="grid grid-cols-2 gap-8 pt-4 text-xs">
               <div>
-                <div className="font-bold border-b border-black pb-1 mb-2">Сдал (Исполнитель):</div>
+                <div className="font-bold border-b border-black pb-1 mb-2">
+                  Сдал (Исполнитель):
+                </div>
                 <p>{contractor}</p>
                 <p className="font-mono text-[11px] text-neutral-600 mt-1">ИИН/БИН: {iin}</p>
-                <div className="mt-8 text-[11px] text-neutral-500">Подпись: ________________ / М.П.</div>
+                <div className="mt-8 text-[11px] text-neutral-500">
+                  Подпись: ________________ / М.П.
+                </div>
               </div>
 
               <div>
                 <div className="font-bold border-b border-black pb-1 mb-2">Принял (Заказчик):</div>
                 <p>{customer}</p>
-                <div className="mt-8 text-[11px] text-neutral-500">Подпись: ________________ / М.П.</div>
+                <div className="mt-8 text-[11px] text-neutral-500">
+                  Подпись: ________________ / М.П.
+                </div>
               </div>
             </div>
 
             {/* QR Seal */}
             <div className="mt-6 flex items-center gap-4 rounded border border-neutral-300 bg-neutral-50 p-4 text-xs">
-              {qr ? <img src={qr} alt="Solscan QR" className="h-24 w-24 border border-neutral-300" /> : <div className="h-24 w-24 bg-neutral-200" />}
+              {qr ? (
+                <img src={qr} alt="Solscan QR" className="h-24 w-24 border border-neutral-300" />
+              ) : (
+                <div className="h-24 w-24 bg-neutral-200" />
+              )}
               <div className="space-y-1">
-                <div className="font-bold text-neutral-800">✓ ЦИФРОВАЯ ОНЧЕЙН-ПЕЧАТЬ (ЭКСПЛОРЕР SOLSCAN)</div>
+                <div className="font-bold text-neutral-800">
+                  ✓ ЦИФРОВАЯ ОНЧЕЙН-ПЕЧАТЬ (ЭКСПЛОРЕР SOLSCAN)
+                </div>
                 <p className="text-[11px] text-neutral-600">
-                  Расчет зафиксирован в смарт-контракте Solana. Отсканируйте QR-код для проверки криптографического подтверждения:
+                  Расчет зафиксирован в смарт-контракте Solana. Отсканируйте QR-код для проверки
+                  криптографического подтверждения:
                 </p>
                 {paySig && (
                   <p className="font-mono text-[10px] text-neutral-500 break-all">{paySig}</p>

@@ -15,14 +15,19 @@ import { demoById } from "@/lib/demoWallets";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { useProfile } from "@/lib/profile/ProfileContext";
 import { useMode } from "@/lib/mode/ModeContext";
+import { getSavedCollaborators, SavedCollaborator } from "@/lib/profile/collaborators";
 
 const parseKey = (s: string): PublicKey | null => {
-  try { return s.trim() ? new PublicKey(s.trim()) : null; } catch { return null; }
+  try {
+    return s.trim() ? new PublicKey(s.trim()) : null;
+  } catch {
+    return null;
+  }
 };
 
 export default function CreatePage() {
   const { t } = useI18n();
-  const { profile } = useProfile();
+  const { profile, saveProfile } = useProfile();
   const { isDemo } = useMode();
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
@@ -34,13 +39,27 @@ export default function CreatePage() {
   const [useCollab, setUseCollab] = useState(false);
   const [collabPct, setCollabPct] = useState(15);
   const [collabAddr, setCollabAddr] = useState("");
+  const [collabName, setCollabName] = useState("");
+  const [showCollabInAct, setShowCollabInAct] = useState(true);
   const [vaultAddr, setVaultAddr] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<{ creator: string; id: string; sig: string } | null>(null);
+  const [created, setCreated] = useState<{
+    creator: string;
+    id: string;
+    sig: string;
+  } | null>(null);
   const [activePreviewTab, setActivePreviewTab] = useState<"blink" | "checkout">("blink");
 
-  // Rates for SOL -> USD -> KZT
+  // Requisites for unauthenticated users or inline editing
+  const [contractorName, setContractorName] = useState(profile.companyOrName || "");
+  const [contractorIin, setContractorIin] = useState(profile.iinBin || "");
+  const [savedRequisitesNotice, setSavedRequisitesNotice] = useState(false);
+
+  // Saved collaborators from directory
+  const [savedCollabs, setSavedCollabs] = useState<SavedCollaborator[]>([]);
+
+  // Exchange rate for fiat estimates
   const [rate, setRate] = useState<{ kzt: number; usd: number } | null>(null);
 
   useEffect(() => {
@@ -50,20 +69,62 @@ export default function CreatePage() {
       .catch(() => setRate({ kzt: 75000, usd: 150 }));
   }, []);
 
-  // Pre-fill collaborator from profile if available
   useEffect(() => {
-    if (profile.defaultCollabWallet && !collabAddr) {
-      setCollabAddr(profile.defaultCollabWallet);
-      setCollabPct(profile.defaultCollabPct || 15);
+    if (profile.companyOrName) setContractorName(profile.companyOrName);
+    if (profile.iinBin) setContractorIin(profile.iinBin);
+  }, [profile]);
+
+  // Load collaborators when wallet is connected
+  useEffect(() => {
+    if (publicKey) {
+      const list = getSavedCollaborators(publicKey.toBase58());
+      setSavedCollabs(list);
+    } else {
+      setSavedCollabs([]);
     }
-  }, [profile, collabAddr]);
+  }, [publicKey]);
+
+  // Read URL query params (e.g. from Collaborator Directory "/create?collabWallet=...&collabPct=...")
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const qWallet = params.get("collabWallet");
+      const qPct = params.get("collabPct");
+      if (qWallet) {
+        setUseCollab(true);
+        setCollabAddr(qWallet);
+        if (qPct) setCollabPct(Number(qPct));
+      }
+    }
+  }, []);
+
+  const handleSelectSavedCollab = (collabId: string) => {
+    const found = savedCollabs.find((c) => c.id === collabId);
+    if (found) {
+      setCollabAddr(found.wallet);
+      setCollabPct(found.defaultPct);
+      setCollabName(found.name);
+    }
+  };
+
+  const handleSaveInlineRequisites = () => {
+    saveProfile({
+      ...profile,
+      companyOrName: contractorName.trim() || profile.companyOrName,
+      iinBin: contractorIin.trim() || profile.iinBin,
+    });
+    setSavedRequisitesNotice(true);
+    setTimeout(() => setSavedRequisitesNotice(false), 3000);
+  };
 
   const amount = solToLamports(amountStr);
   const vaultBps = Math.round(vaultPct * 100);
   const collabBps = useCollab ? Math.round(collabPct * 100) : 0;
   const collabKey = useCollab ? parseKey(collabAddr) : null;
-  // Treasury vault address (or demo vault in demo mode)
-  const defaultVaultKey = isDemo ? new PublicKey(demoById("vault").publicKey) : (publicKey || new PublicKey("11111111111111111111111111111111"));
+
+  const defaultVaultKey = isDemo
+    ? new PublicKey(demoById("vault").publicKey)
+    : publicKey || new PublicKey("11111111111111111111111111111111");
   const vaultKey = parseKey(vaultAddr) || defaultVaultKey;
 
   const problem = useMemo(() => {
@@ -89,19 +150,53 @@ export default function CreatePage() {
     setError(null);
     try {
       const invoiceId = BigInt(Date.now());
-      log("info", `Creating invoice #${invoiceId} as ${publicKey.toBase58()} (${lamportsToSol(amount)} SOL, fee ${vaultBps / 100}%, collab ${collabBps / 100}%)`);
+      log(
+        "info",
+        `Creating invoice #${invoiceId} as ${publicKey.toBase58()} (${lamportsToSol(
+          amount
+        )} SOL, fee ${vaultBps / 100}%, collab ${collabBps / 100}%)`
+      );
       const ix = initializeInvoiceIx({
-        creator: publicKey, invoiceId, amount, title: title.trim(), vault: vaultKey,
-        vaultBps, collaborator: collabKey, collaboratorBps: collabBps,
+        creator: publicKey,
+        invoiceId,
+        amount,
+        title: title.trim(),
+        vault: vaultKey,
+        vaultBps,
+        collaborator: collabKey,
+        collaboratorBps: collabBps,
       });
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-      log("info", "Built transaction, asking wallet to sign and send...");
-      const tx = new Transaction({ feePayer: publicKey, blockhash, lastValidBlockHeight }).add(ix);
+      const tx = new Transaction({
+        feePayer: publicKey,
+        blockhash,
+        lastValidBlockHeight,
+      }).add(ix);
       const sig = await sendTransaction(tx, connection);
       log("info", `Sent: ${sig}. Waiting for confirmation...`);
-      const res = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
-      if (res.value.err) throw new Error("Transaction failed on-chain: " + JSON.stringify(res.value.err));
+      const res = await connection.confirmTransaction(
+        { signature: sig, blockhash, lastValidBlockHeight },
+        "confirmed"
+      );
+      if (res.value.err)
+        throw new Error("Transaction failed on-chain: " + JSON.stringify(res.value.err));
       log("ok", `Invoice created on Devnet. https://solscan.io/tx/${sig}?cluster=devnet`);
+
+      // Store invoice metadata for the Act of Completed Works
+      try {
+        const metadata = {
+          client,
+          contractorName: contractorName || profile.companyOrName,
+          contractorIin: contractorIin || profile.iinBin,
+          collabInAct: useCollab ? showCollabInAct : false,
+          collabName: collabName || (collabKey ? collabKey.toBase58() : ""),
+          collabPct: useCollab ? collabPct : 0,
+        };
+        localStorage.setItem(`steppe_inv_meta_${invoiceId.toString()}`, JSON.stringify(metadata));
+      } catch (e) {
+        console.error("Failed to store invoice metadata", e);
+      }
+
       setCreated({ creator: publicKey.toBase58(), id: invoiceId.toString(), sig });
     } catch (e) {
       log("error", `Create failed: ${errText(e)}`);
@@ -114,8 +209,15 @@ export default function CreatePage() {
   if (created) {
     return (
       <ShareCard
-        creator={created.creator} id={created.id} sig={created.sig} title={title}
-        amountSol={lamportsToSol(amount ?? 0n)} client={client} vaultPct={vaultPct} collabPct={useCollab ? collabPct : 0}
+        creator={created.creator}
+        id={created.id}
+        sig={created.sig}
+        title={title}
+        amountSol={lamportsToSol(amount ?? 0n)}
+        client={client}
+        vaultPct={vaultPct}
+        collabPct={useCollab ? collabPct : 0}
+        collabInAct={useCollab ? showCollabInAct : false}
       />
     );
   }
@@ -161,19 +263,67 @@ export default function CreatePage() {
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Left column: Form */}
         <section className="card space-y-4 lg:col-span-7">
-          {/* Profile notice */}
-          <div className="flex items-center justify-between rounded-xl bg-teal-500/10 border border-teal-500/20 px-3.5 py-2 text-xs">
-            <span className="text-teal-300">
-              <b>{t.create.contractorProfileNotice}</b> {profile.companyOrName} ({profile.iinBin})
-            </span>
-            <Link href="/profile" className="text-white underline hover:text-teal-200">
-              {t.create.editProfileLink} ↗
-            </Link>
-          </div>
+          {/* Notice: If connected, show contractor profile summary; if not, show inline requisites inputs */}
+          {publicKey ? (
+            <div className="flex items-center justify-between rounded-xl bg-teal-500/10 border border-teal-500/20 px-3.5 py-2.5 text-xs">
+              <div className="space-y-0.5">
+                <span className="text-teal-300 font-semibold">
+                  {t.create.contractorProfileNotice}
+                </span>
+                <p className="text-white font-medium">
+                  {profile.companyOrName} · ИИН: {profile.iinBin}
+                </p>
+              </div>
+              <Link href="/profile" className="text-teal-300 underline hover:text-white shrink-0 ml-3">
+                {t.create.editProfileLink} ↗
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 p-3.5 text-xs space-y-2.5">
+              <div className="text-amber-300 font-bold flex items-center gap-1.5">
+                <span>⚠️</span> {t.create.notAuthorizedNotice}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label text-[11px]">ФИО / Название ИП</label>
+                  <input
+                    className="input text-xs"
+                    placeholder="ИП Смагулов А.Б."
+                    value={contractorName}
+                    onChange={(e) => setContractorName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label text-[11px]">ИИН / БИН (12 цифр)</label>
+                  <input
+                    className="input font-mono text-xs"
+                    placeholder="940512301824"
+                    maxLength={12}
+                    value={contractorIin}
+                    onChange={(e) => setContractorIin(e.target.value.replace(/\D/g, ""))}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-slate-400 text-[11px]">{t.create.saveRequisitesPrompt}</span>
+                <button
+                  type="button"
+                  onClick={handleSaveInlineRequisites}
+                  className="text-xs text-amber-300 underline font-semibold hover:text-white"
+                >
+                  {t.create.saveRequisitesBtn}
+                </button>
+              </div>
+              {savedRequisitesNotice && (
+                <div className="text-[11px] text-teal-300">Реквизиты сохранены ✓</div>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="label">{t.create.taskTitle}</label>
             <input
+              id="input-task-title"
               className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -185,6 +335,7 @@ export default function CreatePage() {
           <div>
             <label className="label">{t.create.clientName}</label>
             <input
+              id="input-client-name"
               className="input"
               value={client}
               onChange={(e) => setClient(e.target.value)}
@@ -200,6 +351,7 @@ export default function CreatePage() {
               </span>
             </div>
             <input
+              id="input-amount"
               className="input text-lg font-mono font-semibold"
               inputMode="decimal"
               value={amountStr}
@@ -211,44 +363,69 @@ export default function CreatePage() {
           {/* Steppe Protocol Fee (1%) */}
           <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1 text-xs">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-teal-300">⚡ Steppe Protocol Fee (Комиссия сервиса)</span>
+              <span className="font-semibold text-teal-300">{t.create.feeTitle}</span>
               <span className="font-mono font-bold text-white">{vaultPct}%</span>
             </div>
-            <p className="text-slate-400 leading-relaxed">
-              Фиксированная комиссия 1% удерживается смарт-контрактом только в момент успешной оплаты счета. Никаких скрытых платежей.
-            </p>
+            <p className="text-slate-400 leading-relaxed">{t.create.feeDesc}</p>
           </div>
 
-          {/* Collaborator split */}
-          <div className="rounded-xl border border-white/10 p-4 space-y-3">
+          {/* Collaborator split section */}
+          <div className="rounded-xl border border-white/10 p-4 space-y-3.5 bg-black/20">
             <label className="flex items-center gap-2 text-sm font-semibold text-white cursor-pointer">
               <input
+                id="checkbox-use-collab"
                 type="checkbox"
                 checked={useCollab}
                 onChange={(e) => setUseCollab(e.target.checked)}
-                className="h-4 w-4 rounded accent-teal-400"
+                className="h-4 w-4 rounded accent-teal-400 cursor-pointer"
               />
               {t.create.collabCheckbox}
             </label>
 
             {useCollab && (
-              <div className="space-y-3 pt-2">
-                <div className="flex justify-between text-xs text-slate-300">
-                  <span>{t.create.collabShare}</span>
-                  <span className="font-bold text-sky-400 font-mono">{collabPct}%</span>
+              <div className="space-y-3.5 pt-2 border-t border-white/10">
+                {/* Saved Collaborator Dropdown */}
+                {savedCollabs.length > 0 && (
+                  <div>
+                    <label className="label">{t.create.selectSavedCollab}</label>
+                    <select
+                      id="select-saved-collab"
+                      onChange={(e) => handleSelectSavedCollab(e.target.value)}
+                      defaultValue=""
+                      className="input text-xs bg-[#0f172a] cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        {t.create.selectSavedCollabPlaceholder}
+                      </option>
+                      {savedCollabs.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} — {c.defaultPct}% ({c.wallet.slice(0, 6)}...{c.wallet.slice(-4)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-slate-300">
+                    <span>{t.create.collabShare}</span>
+                    <span className="font-bold text-sky-400 font-mono">{collabPct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={50}
+                    step={1}
+                    value={collabPct}
+                    onChange={(e) => setCollabPct(+e.target.value)}
+                    className="w-full accent-sky-400"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min={1}
-                  max={50}
-                  step={1}
-                  value={collabPct}
-                  onChange={(e) => setCollabPct(+e.target.value)}
-                  className="w-full accent-sky-400"
-                />
+
                 <div>
                   <label className="label">{t.create.collabAddr}</label>
                   <input
+                    id="input-collab-addr"
                     className="input font-mono text-xs"
                     placeholder={t.create.collabPlaceholder}
                     value={collabAddr}
@@ -256,13 +433,35 @@ export default function CreatePage() {
                   />
                   {isDemo && (
                     <button
+                      id="btn-use-demo-collab"
                       type="button"
-                      className="mt-1.5 text-xs text-teal-300 underline"
-                      onClick={() => setCollabAddr(demoById("collaborator").publicKey)}
+                      className="mt-1.5 text-xs text-teal-300 underline hover:text-white"
+                      onClick={() => {
+                        const demoCollab = demoById("collaborator");
+                        setCollabAddr(demoCollab.publicKey);
+                        setCollabName("Алина (UI/UX Дизайнер)");
+                      }}
                     >
                       {t.create.useDemoCollab}
                     </button>
                   )}
+                </div>
+
+                {/* Checkbox: Show Collaborator in Act of Completed Works */}
+                <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 space-y-1.5">
+                  <label className="flex items-start gap-2.5 text-xs font-semibold text-white cursor-pointer">
+                    <input
+                      id="checkbox-show-collab-in-act"
+                      type="checkbox"
+                      checked={showCollabInAct}
+                      onChange={(e) => setShowCollabInAct(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded accent-sky-400 cursor-pointer shrink-0"
+                    />
+                    <span>{t.create.showCollabInAct}</span>
+                  </label>
+                  <p className="text-[11px] text-slate-300 pl-6 leading-relaxed">
+                    {t.create.showCollabInActHint}
+                  </p>
                 </div>
               </div>
             )}
@@ -284,6 +483,7 @@ export default function CreatePage() {
             {error && <p className="mb-3 break-words text-xs text-red-400">{error}</p>}
 
             <button
+              id="btn-deploy-invoice"
               className="btn w-full text-base py-3"
               disabled={!publicKey || !!problem || busy || programMissing}
               onClick={deploy}
@@ -310,7 +510,9 @@ export default function CreatePage() {
               <div className="space-y-2 text-xs border-t border-white/5 pt-3">
                 <div className="flex justify-between">
                   <span className="text-teal-300 font-semibold">Вам на кошелек ({creatorPct}%):</span>
-                  <span className="font-mono text-white font-bold">{lamportsToSol(split.creator)} SOL</span>
+                  <span className="font-mono text-white font-bold">
+                    {lamportsToSol(split.creator)} SOL
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Комиссия протокола ({vaultPct}%):</span>
@@ -319,7 +521,9 @@ export default function CreatePage() {
                 {useCollab && (
                   <div className="flex justify-between text-sky-300">
                     <span>Напарнику ({collabPct}%):</span>
-                    <span className="font-mono font-bold">{lamportsToSol(split.collaborator)} SOL</span>
+                    <span className="font-mono font-bold">
+                      {lamportsToSol(split.collaborator)} SOL
+                    </span>
                   </div>
                 )}
               </div>
@@ -356,7 +560,9 @@ export default function CreatePage() {
                 iconUrl="/preview-banner.svg"
                 domain="steppeinvoice.app"
                 title={`${title || "Инвойс"} — ${amount ? lamportsToSol(amount) : "..."} SOL`}
-                description={`⚡ Авто-сплит: ${creatorPct}% Исполнителю${useCollab ? ` · ${collabPct}% Напарнику` : ""} · 1% Steppe Fee`}
+                description={`⚡ Авто-сплит: ${creatorPct}% Исполнителю${
+                  useCollab ? ` · ${collabPct}% Напарнику` : ""
+                } · 1% Steppe Fee`}
               />
             ) : (
               <div className="card space-y-3 border-dashed border-teal-500/30 text-center py-6">

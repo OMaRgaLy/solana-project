@@ -43,11 +43,13 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap gap-4 pt-2">
-            <Link href="/create" className="btn text-base py-3 px-6 shadow-xl">
+            <Link id="hero-create-cta" href="/create" className="btn text-base py-3 px-6 shadow-xl">
               {t.home.createCta}
             </Link>
             {!isDemo ? (
               <button
+                id="hero-demo-cta"
+                type="button"
                 onClick={() => setMode("demo")}
                 className="btn btn-ghost text-base py-3 px-6 border-amber-400/30 text-amber-300 hover:bg-amber-400/15"
               >

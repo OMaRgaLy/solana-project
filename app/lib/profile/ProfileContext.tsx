@@ -1,72 +1,83 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export interface UserProfile {
   companyOrName: string;
   iinBin: string;
-  email: string;
-  phone: string;
-  telegram: string;
-  payoutWallet: string;
-  defaultCollabName: string;
-  defaultCollabWallet: string;
-  defaultCollabPct: number;
+  legalAddress: string;
+  iban: string;
+  bic: string;
 }
 
-const defaultProfile: UserProfile = {
+export const defaultProfile: UserProfile = {
   companyOrName: "ИП Смагулов А.Б.",
   iinBin: "940512301824",
-  email: "freelance@steppeinvoice.app",
-  phone: "+7 777 123 4567",
-  telegram: "@nomad_dev",
-  payoutWallet: "",
-  defaultCollabName: "UI/UX Дизайнер",
-  defaultCollabWallet: "",
-  defaultCollabPct: 15,
+  legalAddress: "г. Астана, ул. Достык, 18",
+  iban: "KZ869261801234567890",
+  bic: "KZKOKZ22",
 };
 
 interface ProfileContextType {
   profile: UserProfile;
   updateProfile: (updates: Partial<UserProfile>) => void;
   saveProfile: (p: UserProfile) => void;
+  isCustomProfile: boolean;
 }
 
 const ProfileContext = createContext<ProfileContextType>({
   profile: defaultProfile,
   updateProfile: () => {},
   saveProfile: () => {},
+  isCustomProfile: false,
 });
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
+  const { publicKey } = useWallet();
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+  const [isCustomProfile, setIsCustomProfile] = useState(false);
+
+  const getStorageKey = useCallback(() => {
+    return publicKey ? `steppe_profile_${publicKey.toBase58()}` : "steppe_user_profile";
+  }, [publicKey]);
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("steppe_user_profile");
+      const key = getStorageKey();
+      const saved = localStorage.getItem(key);
       if (saved) {
         setProfile((prev) => ({ ...prev, ...JSON.parse(saved) }));
+        setIsCustomProfile(true);
+      } else {
+        // Fallback to default
+        setProfile(defaultProfile);
+        setIsCustomProfile(false);
       }
     } catch {
       // fallback
     }
-  }, []);
+  }, [publicKey, getStorageKey]);
 
   const saveProfile = (next: UserProfile) => {
     setProfile(next);
-    localStorage.setItem("steppe_user_profile", JSON.stringify(next));
+    setIsCustomProfile(true);
+    const key = getStorageKey();
+    localStorage.setItem(key, JSON.stringify(next));
   };
 
   const updateProfile = (updates: Partial<UserProfile>) => {
     setProfile((prev) => {
       const next = { ...prev, ...updates };
-      localStorage.setItem("steppe_user_profile", JSON.stringify(next));
+      const key = getStorageKey();
+      localStorage.setItem(key, JSON.stringify(next));
+      setIsCustomProfile(true);
       return next;
     });
   };
 
   return (
-    <ProfileContext.Provider value={{ profile, updateProfile, saveProfile }}>
+    <ProfileContext.Provider value={{ profile, updateProfile, saveProfile, isCustomProfile }}>
       {children}
     </ProfileContext.Provider>
   );

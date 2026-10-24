@@ -15,20 +15,23 @@ const RPC = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 export default function Providers({ children }: { children: React.ReactNode }) {
   // Built-in Demo Wallets (available for seamless sandbox demo testing)
   const wallets = useMemo(
-    () => DEMO_WALLETS.filter((w) => ["freelancer", "client1", "client2"].includes(w.id)).map((w) => new DemoWalletAdapter(w)),
+    () =>
+      DEMO_WALLETS.filter((w) => ["freelancer", "client1", "client2"].includes(w.id)).map(
+        (w) => new DemoWalletAdapter(w)
+      ),
     []
   );
 
   return (
     <I18nProvider>
       <ModeProvider>
-        <ProfileProvider>
-          <ConnectionProvider endpoint={RPC}>
-            <WalletProvider wallets={wallets} autoConnect={false}>
-              <WalletModalProvider>{children}</WalletModalProvider>
-            </WalletProvider>
-          </ConnectionProvider>
-        </ProfileProvider>
+        <ConnectionProvider endpoint={RPC}>
+          <WalletProvider wallets={wallets} autoConnect={true}>
+            <WalletModalProvider>
+              <ProfileProvider>{children}</ProfileProvider>
+            </WalletModalProvider>
+          </WalletProvider>
+        </ConnectionProvider>
       </ModeProvider>
     </I18nProvider>
   );

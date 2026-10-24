@@ -5,7 +5,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import type { WalletName } from "@solana/wallet-adapter-base";
 import { DEMO_WALLETS } from "@/lib/demoWallets";
-import { lamportsToSol, short, solscanAddr } from "@/lib/format";
+import { lamportsToSol } from "@/lib/format";
 import { useMode } from "@/lib/mode/ModeContext";
 import { useI18n } from "@/lib/i18n/I18nContext";
 
@@ -15,9 +15,8 @@ export default function DemoBar() {
   const { isDemo, setMode } = useMode();
   const { t } = useI18n();
   const { connection } = useConnection();
-  const { wallet, select, connect, connected, connecting, disconnect } = useWallet();
+  const { wallet, select, connect, connected, disconnect } = useWallet();
   const [balances, setBalances] = useState<Record<string, number | null>>({});
-  const [pending, setPending] = useState<string | null>(null);
 
   const refreshBalances = useCallback(async () => {
     const next: Record<string, number | null> = {};
@@ -40,22 +39,21 @@ export default function DemoBar() {
     return () => clearInterval(interval);
   }, [isDemo, refreshBalances]);
 
-  useEffect(() => {
-    if (pending && wallet?.adapter.name === pending && !connected && !connecting) {
-      setPending(null);
+  const switchWallet = async (label: string) => {
+    if (wallet?.adapter.name === label && connected) return;
+    try {
+      if (connected) {
+        await disconnect();
+      }
+      select(label as WalletName);
+      // Give adapter a microtick then ensure connection
       setTimeout(() => {
         connect().catch(() => {});
-      }, 100);
+      }, 50);
+    } catch (e) {
+      console.error("Wallet switch error:", e);
     }
-  }, [pending, wallet, connected, connecting, connect]);
-
-  function switchWallet(label: string) {
-    void (async () => {
-      if (connected) await disconnect();
-      setPending(label);
-      select(label as WalletName);
-    })();
-  }
+  };
 
   if (!isDemo) return null;
 
@@ -68,17 +66,19 @@ export default function DemoBar() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-slate-400 mr-1">Переключить тест-кошелек:</span>
+          <span className="text-slate-400 mr-1">{t.header.switchWalletText}</span>
           {DEMO_WALLETS.filter((w) => SIGNERS.includes(w.id)).map((w) => {
             const active = connected && wallet?.adapter.name === w.label;
             const bal = balances[w.id];
             return (
               <button
                 key={w.id}
+                id={`btn-demo-${w.id}`}
+                type="button"
                 onClick={() => switchWallet(w.label)}
                 className={`rounded-lg px-2.5 py-1 font-semibold transition-all ${
                   active
-                    ? "bg-amber-400 text-slate-950 shadow-sm"
+                    ? "bg-amber-400 text-slate-950 shadow-sm ring-2 ring-amber-300"
                     : "bg-white/10 text-slate-200 hover:bg-white/20"
                 }`}
               >
@@ -88,9 +88,11 @@ export default function DemoBar() {
           })}
 
           <button
+            id="btn-exit-demo"
+            type="button"
             onClick={() => setMode("live")}
             className="ml-2 rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-slate-300 hover:text-white"
-            title="Выйти из демо-режима"
+            title={t.header.switchToLive}
           >
             ✕ {t.common.liveMode}
           </button>

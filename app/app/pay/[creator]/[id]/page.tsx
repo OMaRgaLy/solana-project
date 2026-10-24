@@ -187,7 +187,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
           </div>
         ) : publicKey ? (
           <div className="space-y-2">
-            <button className="btn w-full text-base py-3 font-bold" onClick={pay} disabled={busy}>
+            <button id="btn-pay-invoice" className="btn w-full text-base py-3 font-bold" onClick={pay} disabled={busy}>
               {busy ? t.pay.payingBtn : `${t.pay.payBtn} ${lamportsToSol(invoice.amount)} SOL`}
             </button>
             <p className="text-[11px] text-slate-500">
@@ -199,6 +199,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
             <WalletMultiButton>{t.pay.connectPrompt}</WalletMultiButton>
             {isDemo && (
               <button
+                id="btn-demo-pay"
                 onClick={payAsDemoClient}
                 className="btn btn-ghost text-xs border-amber-400/40 text-amber-300 hover:bg-amber-400/20"
               >
