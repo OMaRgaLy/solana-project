@@ -43,3 +43,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.example
+
+# Keep .env.production in git: it only holds public settings (no secrets).
+!.env.production

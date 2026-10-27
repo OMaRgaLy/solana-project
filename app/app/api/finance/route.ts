@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth/session";
+import { proxyIfRemote } from "@/lib/proxy";
 import { kvGet, kvSet } from "@/lib/telegram/store";
 
 // Per-user finance document (manual income entries + tax settings), stored under the Telegram id.
 const MAX_BYTES = 200_000;
 
-export async function GET() {
+export async function GET(req: Request) {
+  const remote = await proxyIfRemote(req);
+  if (remote) return remote;
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const raw = await kvGet(`finance:${user.id}`);
@@ -13,6 +16,8 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  const remote = await proxyIfRemote(req);
+  if (remote) return remote;
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const text = await req.text();

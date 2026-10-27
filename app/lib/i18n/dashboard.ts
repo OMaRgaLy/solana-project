@@ -19,7 +19,7 @@ export const dash: Record<Language, DashText> = {
   ru: {
     title: "Финансы и налоги", subtitle: "Доходы из блокчейна и ручные записи — в одном месте, с оценкой налогов РК на 2026 год.",
     loginTitle: "Войдите через Telegram", loginDesc: "Чтобы записи сохранялись и были доступны с любого устройства и в боте. Без пароля — одно нажатие Start.",
-    loginBtn: "Войти через Telegram", loginWaiting: "Откройте бота и нажмите Start — страница обновится сама…", loginUnavailable: "Бот ещё не настроен на сервере.", logout: "Выйти", hello: "Привет", localOnly: "Без входа записи хранятся только в этом браузере.",
+    loginBtn: "Войти через Telegram", loginWaiting: "Откройте бота и нажмите Start — страница обновится сама…", loginUnavailable: "Вход сейчас недоступен: сервер входа не отвечает. Попробуйте позже.", logout: "Выйти", hello: "Привет", localOnly: "Без входа записи хранятся только в этом браузере.",
     kpiIncome: "Доход с начала года", kpiTaxDue: "Налоги и взносы (оценка)", kpiPaid: "Уже уплачено", kpiLeft: "Осталось доплатить", kpiProjection: "Прогноз на год", kpiProjectionHint: "если темп сохранится",
     settings: "Налоговый режим", regime: "Режим", regimeSe: "Самозанятый", regimeIp: "ИП на упрощёнке",
     regimeSeHint: "4% с дохода, без ИП. Лимит 300 МРП в месяц, только виды деятельности из списка.",
@@ -38,7 +38,7 @@ export const dash: Record<Language, DashText> = {
   en: {
     title: "Finance & taxes", subtitle: "On-chain income and manual entries in one place, with a Kazakhstan 2026 tax estimate.",
     loginTitle: "Sign in with Telegram", loginDesc: "So your records are saved, available on any device and in the bot. No password — one tap on Start.",
-    loginBtn: "Sign in with Telegram", loginWaiting: "Open the bot and press Start — this page updates on its own…", loginUnavailable: "The bot is not configured on the server yet.", logout: "Sign out", hello: "Hi", localOnly: "Without signing in, records stay in this browser only.",
+    loginBtn: "Sign in with Telegram", loginWaiting: "Open the bot and press Start — this page updates on its own…", loginUnavailable: "Sign-in is unavailable right now: the sign-in server is not responding. Try again later.", logout: "Sign out", hello: "Hi", localOnly: "Without signing in, records stay in this browser only.",
     kpiIncome: "Income year to date", kpiTaxDue: "Taxes & contributions (est.)", kpiPaid: "Already paid", kpiLeft: "Left to pay", kpiProjection: "Full-year projection", kpiProjectionHint: "if the pace holds",
     settings: "Tax regime", regime: "Regime", regimeSe: "Self-employed", regimeIp: "IP, simplified",
     regimeSeHint: "4% of income, no IP. Limit 300 MRP per month, listed activities only.",
@@ -57,7 +57,7 @@ export const dash: Record<Language, DashText> = {
   kk: {
     title: "Қаржы және салықтар", subtitle: "Блокчейндегі табыс пен қолмен енгізілген жазбалар бір жерде, ҚР 2026 салығының бағасымен.",
     loginTitle: "Telegram арқылы кіріңіз", loginDesc: "Жазбалар сақталып, кез келген құрылғыда және ботта қолжетімді болуы үшін. Құпиясөзсіз — Start түймесін бір басу.",
-    loginBtn: "Telegram арқылы кіру", loginWaiting: "Ботты ашып, Start басыңыз — бет өзі жаңарады…", loginUnavailable: "Бот серверде әлі бапталмаған.", logout: "Шығу", hello: "Сәлем", localOnly: "Кірмесеңіз, жазбалар тек осы браузерде сақталады.",
+    loginBtn: "Telegram арқылы кіру", loginWaiting: "Ботты ашып, Start басыңыз — бет өзі жаңарады…", loginUnavailable: "Кіру қазір қолжетімсіз: кіру сервері жауап бермейді. Кейінірек қайталаңыз.", logout: "Шығу", hello: "Сәлем", localOnly: "Кірмесеңіз, жазбалар тек осы браузерде сақталады.",
     kpiIncome: "Жыл басынан табыс", kpiTaxDue: "Салықтар мен жарналар (баға)", kpiPaid: "Төленді", kpiLeft: "Төлеу қалды", kpiProjection: "Жылдық болжам", kpiProjectionHint: "қарқын сақталса",
     settings: "Салық режимі", regime: "Режим", regimeSe: "Өзін-өзі жұмыспен қамтыған", regimeIp: "Оңайлатылған ЖК",
     regimeSeHint: "Табыстың 4%-ы, ЖК-сыз. Айына 300 АЕК шегі, тек тізімдегі қызмет түрлері.",

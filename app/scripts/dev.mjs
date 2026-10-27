@@ -71,7 +71,8 @@ console.log(`\n[dev] Open the site: ${siteUrl}\n`);
 const next = spawn("npx", ["next", "dev", "-p", String(PORT)], {
   stdio: "inherit",
   shell: true,
-  env: { ...process.env, NEXT_PUBLIC_SITE_URL: siteUrl },
+  // Bot links point at the public Vercel site when PUBLIC_SITE_URL is set, otherwise at the tunnel.
+  env: { ...process.env, NEXT_PUBLIC_SITE_URL: process.env.PUBLIC_SITE_URL || siteUrl },
 });
 children.push(next);
 next.on("exit", (code) => { children.forEach(killTree); process.exit(code ?? 0); });
