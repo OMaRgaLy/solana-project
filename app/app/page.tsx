@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { landing } from "@/lib/i18n/landing";
 import { useMode } from "@/lib/mode/ModeContext";
@@ -15,6 +16,12 @@ export default function Home() {
   const { lang } = useI18n();
   const L = landing[lang];
   const { isDemo, setMode } = useMode();
+  const router = useRouter();
+  // Always lands somewhere useful: enters demo mode if needed, then opens the invoice form.
+  const startDemo = () => {
+    setMode("demo");
+    router.push("/create");
+  };
 
   return (
     <div className="space-y-24 pb-8">
@@ -39,15 +46,12 @@ export default function Home() {
             <Link id="hero-create-cta" href="/create" className="btn px-7 py-3.5 text-base">
               {L.cta} →
             </Link>
-            <button
-              id="hero-demo-cta"
-              type="button"
-              onClick={() => setMode("demo")}
-              disabled={isDemo}
-              className="btn btn-ghost px-6 py-3.5 text-base"
-            >
-              {isDemo ? L.demoOn : L.demo}
-            </button>
+            {/* Already in demo: the main button above does the same thing, so this one would only look dead. */}
+            {!isDemo && (
+              <button id="hero-demo-cta" type="button" onClick={startDemo} className="btn btn-ghost px-6 py-3.5 text-base">
+                {L.demo}
+              </button>
+            )}
           </div>
 
           <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-slate-400">
@@ -147,7 +151,7 @@ export default function Home() {
       {/* Final CTA */}
       <section className="card flex flex-col items-center gap-5 bg-[#171b21] py-14 text-center">
         <h2 className="max-w-xl text-2xl font-semibold text-white sm:text-3xl">{L.finalTitle}</h2>
-        <button type="button" onClick={() => setMode("demo")} className="btn px-8 py-3.5 text-base">
+        <button id="final-demo-cta" type="button" onClick={startDemo} className="btn px-8 py-3.5 text-base">
           {L.finalCta}
         </button>
       </section>
