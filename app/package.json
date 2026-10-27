@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:plain": "next dev",
+    "webhook": "node scripts/set-webhook.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

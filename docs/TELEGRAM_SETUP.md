@@ -5,27 +5,50 @@
 cd app
 npm run dev
 ```
-Скрипт `app/scripts/dev.mjs` сам: поднимает туннель ngrok, регистрирует вебхук бота на его адрес и запускает сайт. Адрес сайта выводится в консоль (`[dev] Open the site: ...`). Сайт и бот работают в одном процессе, поэтому вход, привязка кошелька и уведомления связаны. Состояние хранится в `app/.data/` и переживает перезапуски.
+Скрипт `app/scripts/dev.mjs` сам: поднимает туннель ngrok, регистрирует вебхук бота на его адрес и запускает сайт. Адрес сайта выводится в консоль
+(`[dev] Open the site: ...`). Состояние хранится в `app/.data/` и переживает перезапуски. `npm run dev:plain` — только сайт, без бота.
 
-`npm run dev:plain` — только сайт, без бота.
+## Что такое переменные окружения
 
-## Переменные (`app/.env`, в git не попадает)
-| Переменная | Что это |
-|---|---|
-| `TELEGRAM_BOT_TOKEN` | Токен от @BotFather. Секрет. |
-| `TELEGRAM_WEBHOOK_SECRET` | Случайная строка: Telegram присылает её с каждым сообщением, чужие запросы отсекаются. |
-| `NEXT_PUBLIC_TELEGRAM_BOT` | Имя бота без `@`. |
-| `SESSION_SECRET` | Подпись cookie входа. |
-| `CRON_SECRET` | Защита `/api/telegram/poll`. |
-| `NGROK_DOMAIN` | Необязательно: свой статический домен ngrok. |
-| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Нужны только на Vercel (см. ниже). |
+Это настройки и пароли, которые лежат **вне кода**, чтобы токен бота не попал в git. Локально они в файле `app/.env` (в git не попадает).
+Хостинг этот файл не видит: на Vercel те же значения вносятся отдельно, в **Settings → Environment Variables**. Они применяются только к новому деплою,
+поэтому после изменений нужен **Redeploy**.
 
-Секреты и имя бота заполняет `node scripts/setup-env.mjs`, если пусты.
+| Переменная | Что это | Откуда взять |
+|---|---|---|
+| `TELEGRAM_BOT_TOKEN` | Токен бота | `app/.env` (выдаёт @BotFather) |
+| `TELEGRAM_WEBHOOK_SECRET` | Секрет вебхука | `app/.env` |
+| `NEXT_PUBLIC_TELEGRAM_BOT` | Имя бота без `@` | `app/.env` |
+| `SESSION_SECRET` | Подпись входа | `app/.env` |
+| `NEXT_PUBLIC_SITE_URL` | Адрес сайта: `https://steppe-invoice-delta.vercel.app` | вписать вручную (в `.env` пусто) |
+| `NEXT_PUBLIC_PROGRAM_ID` | Адрес контракта в devnet | уже есть на Vercel; значение в `app/.env` |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` (или `KV_REST_API_URL` / `_TOKEN`) | База для входа | создаётся автоматически, см. ниже |
 
-## Vercel (https://steppe-invoice-delta.vercel.app)
-На Vercel сервер «засыпает» и теряет память между запросами, а на диск писать нельзя, поэтому нужна внешняя база. Для этого подходит Upstash Redis (бесплатный тариф): Vercel → Storage → Upstash Redis → Connect to Project. Переменные подставятся сами.
+Быстрый способ: на странице Environment Variables есть кнопка **Import .env**: перетащите туда `app/.env`. Потом поправьте `NEXT_PUBLIC_SITE_URL`.
 
-Затем в Settings → Environment Variables добавить `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT`, `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL=https://steppe-invoice-delta.vercel.app` → Redeploy.
+## Что такое Upstash и зачем он
 
-**У бота один вебхук.** Пока работает `npm run dev`, вебхук указывает на ngrok, и Vercel сообщений не получает. Для боевого сайта заведите второго бота у @BotFather и пропишите его токен в Vercel; либо перед показом на Vercel вручную вызовите:
-`https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://steppe-invoice-delta.vercel.app/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>`
+Сайт на Vercel не «живёт» постоянно: сервер включается на каждый запрос и сразу забывает всё, что держал в памяти. Вход через Telegram состоит из двух запросов
+(браузер просит ссылку → бот подтверждает → браузер проверяет), и между ними нужно где-то запомнить «этот вход подтверждён». Там же хранятся привязанные кошельки
+и записи доходов. Для этого нужна маленькая внешняя база. **Upstash Redis** — такая база, у неё есть бесплатный тариф, которого хватает на сотни входов в день.
+
+Подключение: в проекте на Vercel вкладка **Storage** → **Create Database** → **Upstash** (Redis) → бесплатный план → **Connect to Project**.
+Vercel сам добавит переменные `KV_REST_API_URL` и `KV_REST_API_TOKEN`: код понимает оба варианта имён. Затем **Redeploy**.
+
+## Вебхук для боевого сайта
+
+У бота **один** вебхук. `npm run dev` перенаправляет его на ваш ноутбук при каждом запуске, и тогда сайт на Vercel перестаёт получать сообщения.
+Поэтому для разработки заведите **второго бота** в @BotFather и держите его токен только в локальном `app/.env`, а токен боевого бота внесите только в Vercel.
+
+Когда на Vercel всё внесено и задеплоено, один раз выполните (токен и секрет берутся из `app/.env`, они должны совпадать со значениями в Vercel):
+```
+cd app
+npm run webhook -- https://steppe-invoice-delta.vercel.app
+```
+Команда покажет, что Telegram видит нужный адрес и нет ошибок.
+
+## Проверка
+
+1. Напишите боту `/start`, должно прийти меню с кнопками.
+2. На сайте: **Финансы** → **Войти через Telegram** → в боте нажмите **Start** → страница сама войдёт.
+3. Если вход пишет «бот не настроен» — не хватает переменных; если «хранилище не настроено» — не подключён Upstash.
