@@ -16,6 +16,7 @@ import { errText, log } from "@/lib/log";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { extra } from "@/lib/i18n/extra";
 import { guide } from "@/lib/i18n/guide";
+import WalletHelp from "@/components/WalletHelp";
 import { useMode } from "@/lib/mode/ModeContext";
 
 const WalletMultiButton = dynamic(
@@ -217,6 +218,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
                 {t.pay.demoPayBtn}
               </button>
             )}
+            <WalletHelp />
             <Link href="/guide" className="text-xs text-slate-400 underline hover:text-teal-300">
               {guide[lang].payLink}
             </Link>

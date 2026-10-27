@@ -12,6 +12,7 @@ export type Guide = {
   backToPay: string;
   payLink: string;
   officialSite: string;
+  quick: { title: string; steps: string[]; install: string; fullGuide: string; cardNote: string };
 };
 
 export const guide: Record<Language, Guide> = {
@@ -50,6 +51,7 @@ export const guide: Record<Language, Guide> = {
     backToPay: "Вернуться к оплате",
     payLink: "Нет кошелька? Как оплатить",
     officialSite: "Официальный сайт Phantom",
+    quick: { title: "Нет кошелька? Это займёт 5 минут", steps: ["Установите Phantom (телефон или браузер)","Создайте кошелёк, фразу из 12 слов запишите на бумагу и никому не показывайте","Нажмите «Купить» в Phantom и пополните SOL картой, затем вернитесь сюда и нажмите «Оплатить»"], install: "Установить Phantom", fullGuide: "Подробная инструкция", cardNote: "Способы и комиссию для вашей страны и карты Phantom покажет до подтверждения." },
   },
   kk: {
     title: "Криптоңыз әлі жоқ болса, шотты қалай төлеуге болады",
@@ -86,6 +88,7 @@ export const guide: Record<Language, Guide> = {
     backToPay: "Төлемге оралу",
     payLink: "Әмиян жоқ па? Қалай төлеуге болады",
     officialSite: "Phantom ресми сайты",
+    quick: { title: "Әмиян жоқ па? Бұл 5 минут алады", steps: ["Phantom орнатыңыз (телефон немесе браузер)","Әмиян жасап, 12 сөзден тұратын тіркесті қағазға жазыңыз, ешкімге көрсетпеңіз","Phantom ішінде «Сатып алу» түймесін басып, SOL-ды картамен толтырыңыз, содан кейін осында оралып «Төлеу» басыңыз"], install: "Phantom орнату", fullGuide: "Толық нұсқаулық", cardNote: "Еліңіз бен картаңыз үшін тәсілдер мен комиссияны Phantom растауға дейін көрсетеді." },
   },
   en: {
     title: "How to pay an invoice if you have no crypto yet",
@@ -122,5 +125,6 @@ export const guide: Record<Language, Guide> = {
     backToPay: "Back to payment",
     payLink: "No wallet yet? How to pay",
     officialSite: "Official Phantom site",
+    quick: { title: "No wallet yet? It takes 5 minutes", steps: ["Install Phantom (phone or browser)","Create a wallet, write the 12-word phrase on paper and show it to no one","Tap Buy in Phantom and add SOL with your card, then come back here and press Pay"], install: "Install Phantom", fullGuide: "Full guide", cardNote: "Phantom shows the methods and fees for your country and card before you confirm." },
   },
 };

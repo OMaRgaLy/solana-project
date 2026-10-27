@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { DEMO_WALLETS } from "@/lib/demoWallets";
 import { DemoWalletAdapter } from "@/lib/DemoWalletAdapter";
 import { AuthProvider } from "@/lib/auth/AuthContext";
@@ -19,10 +20,12 @@ import { ProfileProvider } from "@/lib/profile/ProfileContext";
 function Chain({ children }: { children: React.ReactNode }) {
   const { net, config } = useMode();
   const wallets = useMemo(
-    () =>
-      net === "devnet"
+    () => [
+      ...(net === "devnet"
         ? DEMO_WALLETS.filter((w) => ["freelancer", "client1", "client2"].includes(w.id)).map((w) => new DemoWalletAdapter(w))
-        : [],
+        : []),
+      new PhantomWalletAdapter(),
+    ],
     [net],
   );
   return (
