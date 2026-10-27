@@ -54,6 +54,20 @@ Invoice PDA seeds: `["invoice", creator, invoice_id (u64 LE)]`.
 
 Open `/demo`: five public Devnet test wallets (freelancer, two clients, vault, collaborator) are built into the site. Their keys are published on purpose and hold worthless test SOL. Connect *Demo Freelancer*, create an invoice, switch to *Demo Client 1*, pay it, and watch the balances change. An on-screen Activity log shows every step. Phantom/Solflare also work.
 
+## Telegram bot
+
+`@steppeinvoice_bot` (Russian, Kazakh, English; picks the language from Telegram, `/lang` overrides it). Every action is a button on the main menu:
+
+- **Try it on the test network** (`/demo`): the bot creates an invoice as *Demo Freelancer*, offers *Pay as demo client*, and then sends the "Paid" alert with a link to the act. The whole flow with nothing to install.
+- **Create invoice** (`/new`): a short dialogue that hands a prefilled draft to the site, where the wallet signs.
+- **Link a wallet** (`/wallet <address>` or `/wallet demo`), **My invoices** (`/my`), **Taxes** (`/tax`), **SOL rate** (`/rate`).
+- Payment alerts: the server re-reads the invoice from chain before notifying, so a forged request cannot announce an unpaid invoice.
+- Sign in on the site through the bot (one tap on *Start*); no passwords.
+
+## Finance and taxes
+
+`/dashboard` combines on-chain income with income earned elsewhere (added by hand), and estimates Kazakhstan 2026 taxes for the *self-employed* regime and for an *IP on the simplified declaration*, with the next payment deadlines. Rules and sources live in [`app/lib/tax/kz2026.ts`](app/lib/tax/kz2026.ts) and are covered by tests. It is an estimate, not tax advice.
+
 ## Run it
 
 Prerequisites: Rust, Solana CLI, Anchor 1.2.1, Node 22. (On Windows use WSL Ubuntu; `scripts/` contains the setup helpers.)
@@ -65,9 +79,10 @@ anchor test --validator legacy        # 9 passing
 
 # 2. Web app
 cd app
-cp .env.example .env.local            # set NEXT_PUBLIC_PROGRAM_ID, NEXT_PUBLIC_APP_URL
+cp .env.example .env.local            # set NEXT_PUBLIC_PROGRAM_ID (+ bot variables, see docs/TELEGRAM_SETUP.md)
 npm install --legacy-peer-deps
-npm run dev                           # http://localhost:3000
+npm run dev                           # ngrok tunnel + Telegram webhook + site, one command
+npm run dev:plain                     # site only, http://localhost:3000
 npm run build                         # production build
 npx vitest run                        # split math unit tests
 

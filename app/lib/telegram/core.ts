@@ -2,7 +2,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { fetchInvoice, fetchInvoicesByCreator, RPC_URL, type InvoiceAccount } from "../program";
 import { lamportsToSol, short, solscanTx } from "../format";
 import { computeSplit } from "../split";
-import { answerCallback, esc, sendMessage, setMyCommands } from "./api";
+import { answerCallback, type Button, esc, sendMessage, setMyCommands } from "./api";
 import { createDemoInvoice, demoAvailable, parseDemoArgs, payDemoInvoice } from "./demo";
 import { kvDel, kvGet, kvSet, setAdd, setMembers } from "./store";
 import { DEMO_WALLETS } from "../demoWallets";
@@ -82,10 +82,32 @@ async function rate() {
   return r && Number.isFinite(r.usd) ? (r as { usd: number; kzt: number }) : null;
 }
 
+/** The main menu: every action is one tap, so nobody has to remember commands. */
+function mainMenu(l: (typeof T)[Lang]): Button[][] {
+  const rows: Button[][] = [
+    [{ text: l.btn.demo, callback_data: "cmd:/demo" }],
+    [{ text: l.btn.create, callback_data: "cmd:/new" }, { text: l.btn.mine, callback_data: "cmd:/my" }],
+    [{ text: l.btn.tax, callback_data: "cmd:/tax" }, { text: l.btn.rate, callback_data: "cmd:/rate" }],
+    [{ text: l.btn.wallet, callback_data: "cmd:/wallet demo" }],
+    [
+      { text: "RU", callback_data: "cmd:/lang ru" },
+      { text: "KZ", callback_data: "cmd:/lang kk" },
+      { text: "EN", callback_data: "cmd:/lang en" },
+    ],
+  ];
+  // Telegram rejects URL buttons that point at localhost.
+  if (!siteUrl().startsWith("http://localhost")) rows.push([{ text: l.btn.site, url: siteUrl() }]);
+  return rows;
+}
+
 /** Inline-button presses. Only the demo "pay" button exists today. */
 export async function handleCallback(cbId: string, chatId: number, data: string, langCode?: string) {
   const pref = await kvGet(`langpref:${chatId}`);
   const l = T[pref && isLang(pref) ? pref : langOf(langCode)];
+  if (data.startsWith("cmd:")) {
+    await answerCallback(cbId);
+    return handleMessage(chatId, data.slice(4), langCode);
+  }
   const m = /^pay:([1-9A-HJ-NP-Za-km-z]{32,44}):(\d{1,20})$/.exec(data);
   if (!m || !demoAvailable()) return answerCallback(cbId);
   await answerCallback(cbId, l.demoPaying);
@@ -122,8 +144,10 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
     await kvSet(`langpref:${chatId}`, lang);
   }
   const l = T[lang];
+  const menuRow: Button[] = [{ text: `☰ ${l.btn.menu}`, callback_data: "cmd:/menu" }];
+  const send = (text: string, buttons: Button[][] = []) => sendMessage(chatId, text, [...buttons, menuRow]);
   await kvSet(`lang:${chatId}`, lang);
-  if (cmd === "/lang") return sendMessage(chatId, `${l.langSet}\n\n${l.welcome}`);
+  if (cmd === "/lang") return sendMessage(chatId, `${l.langSet}\n\n${l.welcome}`, mainMenu(l));
 
   if (cmd.startsWith("/start")) {
     await ensureCommands();
@@ -136,53 +160,54 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
     const w = parseWatchPayload(arg);
     if (w) {
       const inv = await fetchInvoice(conn(), new PublicKey(w.creator), BigInt(w.id)).catch(() => null);
-      if (!inv) return sendMessage(chatId, l.notFound);
+      if (!inv) return send(l.notFound);
       await setAdd(`watch:${w.creator}:${w.id}`, String(chatId));
-      await sendMessage(chatId, l.watching(inv.title));
+      await send(l.watching(inv.title));
       if (inv.isPaid) await notifyIfPaid(w.creator, w.id);
       return;
     }
-    return sendMessage(chatId, l.welcome);
+    return sendMessage(chatId, l.welcome, mainMenu(l));
   }
+  if (cmd === "/menu") return sendMessage(chatId, l.welcome, mainMenu(l));
   if (cmd === "/demo") {
-    if (!demoAvailable()) return sendMessage(chatId, l.demoUnavailable);
-    if (await kvGet(`demo-cd:${chatId}`)) return sendMessage(chatId, l.demoWait);
+    if (!demoAvailable()) return send(l.demoUnavailable);
+    if (await kvGet(`demo-cd:${chatId}`)) return send(l.demoWait);
     await kvSet(`demo-cd:${chatId}`, "1", 20);
-    await sendMessage(chatId, l.demoCreating);
+    await send(l.demoCreating);
     const { title, amountSol } = parseDemoArgs(arg, l.demoDefaultTitle);
     try {
       const { creator, id } = await createDemoInvoice(title, amountSol);
       await setAdd(`watch:${creator}:${id}`, String(chatId));
-      return sendMessage(chatId, l.demoReady(title, amountSol), [
+      return send(l.demoReady(title, amountSol), [
         [{ text: l.demoPayBtn, callback_data: `pay:${creator}:${id}` }],
         [{ text: l.demoWebBtn, url: `${siteUrl()}/pay/${creator}/${id}` }],
       ]);
     } catch {
-      return sendMessage(chatId, l.demoFailed);
+      return send(l.demoFailed);
     }
   }
   if (cmd === "/new") {
     await kvSet(`draft:${chatId}`, JSON.stringify({ step: "title" } satisfies Draft), 3600);
-    return sendMessage(chatId, l.askTitle);
+    return send(l.askTitle);
   }
   if (cmd === "/wallet") {
-    if (!arg) return sendMessage(chatId, l.walletUsage);
+    if (!arg) return send(l.walletUsage);
     if (arg.toLowerCase() === "demo") arg = DEMO_WALLETS.find((w) => w.id === "freelancer")!.publicKey;
-    if (!isKey(arg)) return sendMessage(chatId, l.walletBad);
+    if (!isKey(arg)) return send(l.walletBad);
     const list = await fetchInvoicesByCreator(conn(), new PublicKey(arg)).catch(() => []);
     // Mark what is already paid as notified so linking does not replay history.
     for (const i of list) if (i.isPaid) await setAdd("notified", `${arg}:${i.invoiceId}`);
     await kvSet(`wallet:${chatId}`, arg);
     await setAdd("wallets", arg);
     await setAdd(`wallet-chats:${arg}`, String(chatId));
-    return sendMessage(chatId, l.walletOk(short(arg), list.length));
+    return send(l.walletOk(short(arg), list.length));
   }
   if (cmd === "/my" || cmd === "/tax") {
     const w = await kvGet(`wallet:${chatId}`);
-    if (!w) return sendMessage(chatId, l.needWallet);
+    if (!w) return send(l.needWallet);
     const list = await fetchInvoicesByCreator(conn(), new PublicKey(w)).catch(() => []);
     if (cmd === "/my") {
-      if (!list.length) return sendMessage(chatId, l.noInvoices);
+      if (!list.length) return send(l.noInvoices);
       const lines = list.slice(0, 10).map((i) => `${i.isPaid ? "✅" : "⏳"} ${esc(i.title)} — ${lamportsToSol(i.amount)} SOL`);
       return sendMessage(
         chatId,
@@ -205,25 +230,25 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
   }
   if (cmd === "/rate") {
     const r = await rate();
-    return sendMessage(chatId, r ? l.rate(r.usd.toFixed(2), Math.round(r.kzt).toLocaleString("ru-RU")) : l.rateFail);
+    return send(r ? l.rate(r.usd.toFixed(2), Math.round(r.kzt).toLocaleString("ru-RU")) : l.rateFail);
   }
 
   // Free text: continue the /new wizard.
   const raw = await kvGet(`draft:${chatId}`);
-  if (!raw) return sendMessage(chatId, l.welcome);
+  if (!raw) return sendMessage(chatId, l.welcome, mainMenu(l));
   const d = JSON.parse(raw) as Draft;
   if (d.step === "title") {
     await kvSet(`draft:${chatId}`, JSON.stringify({ step: "amount", title: text.slice(0, 80) }), 3600);
-    return sendMessage(chatId, l.askAmount);
+    return send(l.askAmount);
   }
   if (d.step === "amount") {
     const amount = text.trim().replace(",", ".");
-    if (!/^\d+(\.\d{1,9})?$/.test(amount) || Number(amount) <= 0) return sendMessage(chatId, l.badAmount);
+    if (!/^\d+(\.\d{1,9})?$/.test(amount) || Number(amount) <= 0) return send(l.badAmount);
     await kvSet(`draft:${chatId}`, JSON.stringify({ ...d, step: "client", amount }), 3600);
-    return sendMessage(chatId, l.askClient);
+    return send(l.askClient);
   }
   await kvDel(`draft:${chatId}`);
-  return sendMessage(chatId, l.ready, [
+  return send(l.ready, [
     [{ text: l.open, url: draftUrl({ title: d.title!, amount: d.amount!, client: text.slice(0, 80) }) }],
   ]);
 }

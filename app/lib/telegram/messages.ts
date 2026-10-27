@@ -31,6 +31,7 @@ export type Messages = {
   rateFail: string;
   langSet: string;
   langUsage: string;
+  btn: { demo: string; create: string; mine: string; tax: string; rate: string; wallet: string; site: string; menu: string };
   demoCreating: string;
   demoReady: (title: string, amount: string) => string;
   demoPayBtn: string;
@@ -51,7 +52,7 @@ const link = "/lang ru · kk · en";
 
 export const T: Record<Lang, Messages> = {
   ru: {
-    welcome: `🏹 <b>SteppeInvoice</b> — счета в SOL с авто-сплитом между участниками и актом работ.\n\n/demo — пройти весь путь в тестовом режиме\n/new — создать счёт\n/wallet &lt;адрес&gt; — привязать кошелёк (уведомления об оплатах). Для теста: /wallet demo\n/my — мои счета\n/tax — налог 4% с оплаченных\n/rate — курс SOL\n${link} — язык`,
+    welcome: "🏹 <b>SteppeInvoice</b>\nСчёт в SOL, который сам делится между вами и напарником. К нему — акт работ и уведомление, когда клиент заплатит.\n\nС чего начать: нажмите «Попробовать в тестовой сети». Бот пройдёт весь путь за вас, ничего устанавливать не нужно.",
     watching: (t) => `🔔 Слежу за счётом «${esc(t)}». Напишу сразу, как его оплатят.`,
     notFound: "Счёт не найден.",
     loginOk: "✅ Вход подтверждён. Вернитесь на сайт — он откроется сам.",
@@ -73,6 +74,7 @@ export const T: Record<Lang, Messages> = {
     rateFail: "Курс сейчас недоступен.",
     langSet: "Язык: русский",
     langUsage: "Выберите язык: /lang ru, /lang kk или /lang en",
+    btn: { demo: "Попробовать в тестовой сети", create: "Создать счёт", mine: "Мои счета", tax: "Налоги", rate: "Курс SOL", wallet: "Демо-кошелёк", site: "Открыть сайт", menu: "Меню" },
     demoCreating: "Создаю демо-счёт в тестовой сети…",
     demoReady: (t, a) => `🧪 <b>Демо-счёт готов</b>\n«${esc(t)}» — ${a} SOL\nСплит: 84% вам, 15% напарнику, 1% сервису.\n\nНажмите «Оплатить как демо-клиент»: бот проведёт оплату в тестовой сети, и сюда придёт уведомление с актом.`,
     demoPayBtn: "Оплатить как демо-клиент",
@@ -87,6 +89,7 @@ export const T: Record<Lang, Messages> = {
     demoUnavailable: "Демо доступно только в тестовой сети.",
     demoDefaultTitle: "Демо: дизайн мобильного приложения",
     commands: [
+      { command: "menu", description: "Главное меню" },
       { command: "demo", description: "Демо: весь путь в тестовой сети" },
       { command: "new", description: "Создать счёт" },
       { command: "wallet", description: "Привязать кошелёк" },
@@ -97,7 +100,7 @@ export const T: Record<Lang, Messages> = {
     ],
   },
   kk: {
-    welcome: `🏹 <b>SteppeInvoice</b> — қатысушылар арасында авто-бөлінетін SOL шоттары және орындалған жұмыс акті.\n\n/demo — бүкіл жолды сынақ режимінде өту\n/new — шот құру\n/wallet &lt;мекенжай&gt; — әмиянды байлау (төлем хабарламалары). Тест үшін: /wallet demo\n/my — менің шоттарым\n/tax — төленгендерден 4% салық\n/rate — SOL бағамы\n${link} — тіл`,
+    welcome: "🏹 <b>SteppeInvoice</b>\nSOL-дағы шот өзі сізбен серіктесіңіз арасында бөлінеді. Оған жұмыс акті мен клиент төлегенде хабарлама қосылады.\n\nҚайдан бастау: «Сынақ желісінде байқау» түймесін басыңыз. Бот бүкіл жолды сіз үшін өтеді, ештеңе орнату қажет емес.",
     watching: (t) => `🔔 «${esc(t)}» шотын бақылап отырмын. Төленген бойда хабарлаймын.`,
     notFound: "Шот табылмады.",
     loginOk: "✅ Кіру расталды. Сайтқа оралыңыз — ол өзі ашылады.",
@@ -119,6 +122,7 @@ export const T: Record<Lang, Messages> = {
     rateFail: "Бағам қазір қолжетімсіз.",
     langSet: "Тіл: қазақша",
     langUsage: "Тілді таңдаңыз: /lang ru, /lang kk немесе /lang en",
+    btn: { demo: "Сынақ желісінде байқау", create: "Шот құру", mine: "Менің шоттарым", tax: "Салықтар", rate: "SOL бағамы", wallet: "Демо-әмиян", site: "Сайтты ашу", menu: "Мәзір" },
     demoCreating: "Сынақ желісінде демо-шот жасап жатырмын…",
     demoReady: (t, a) => `🧪 <b>Демо-шот дайын</b>\n«${esc(t)}» — ${a} SOL\nБөлу: 84% сізге, 15% серіктеске, 1% сервиске.\n\n«Демо-клиент ретінде төлеу» түймесін басыңыз: бот сынақ желісінде төлемді жүргізеді, мұнда акті бар хабарлама келеді.`,
     demoPayBtn: "Демо-клиент ретінде төлеу",
@@ -133,6 +137,7 @@ export const T: Record<Lang, Messages> = {
     demoUnavailable: "Демо тек сынақ желісінде қолжетімді.",
     demoDefaultTitle: "Демо: мобильді қосымша дизайны",
     commands: [
+      { command: "menu", description: "Негізгі мәзір" },
       { command: "demo", description: "Демо: бүкіл жол сынақ желісінде" },
       { command: "new", description: "Шот құру" },
       { command: "wallet", description: "Әмиянды байлау" },
@@ -143,7 +148,7 @@ export const T: Record<Lang, Messages> = {
     ],
   },
   en: {
-    welcome: `🏹 <b>SteppeInvoice</b> — SOL invoices that auto-split between collaborators, with a printable act of work.\n\n/demo — try the whole flow in test mode\n/new — create an invoice\n/wallet &lt;address&gt; — link a wallet (payment alerts). To try it: /wallet demo\n/my — my invoices\n/tax — 4% tax on paid invoices\n/rate — SOL rate\n${link} — language`,
+    welcome: "🏹 <b>SteppeInvoice</b>\nAn SOL invoice that splits itself between you and your collaborator, with an act of work and an alert when the client pays.\n\nWhere to start: press “Try it on the test network”. The bot walks the whole flow for you, nothing to install.",
     watching: (t) => `🔔 Watching "${esc(t)}". I'll message you the moment it's paid.`,
     notFound: "Invoice not found.",
     loginOk: "✅ Login confirmed. Go back to the site — it will open on its own.",
@@ -165,6 +170,7 @@ export const T: Record<Lang, Messages> = {
     rateFail: "Rate unavailable right now.",
     langSet: "Language: English",
     langUsage: "Choose a language: /lang ru, /lang kk or /lang en",
+    btn: { demo: "Try it on the test network", create: "Create invoice", mine: "My invoices", tax: "Taxes", rate: "SOL rate", wallet: "Demo wallet", site: "Open the site", menu: "Menu" },
     demoCreating: "Creating a demo invoice on the test network…",
     demoReady: (t, a) => `🧪 <b>Demo invoice ready</b>\n"${esc(t)}" — ${a} SOL\nSplit: 84% to you, 15% to the collaborator, 1% service fee.\n\nPress "Pay as demo client": the bot makes the payment on the test network and a notification with the act arrives here.`,
     demoPayBtn: "Pay as demo client",
@@ -179,6 +185,7 @@ export const T: Record<Lang, Messages> = {
     demoUnavailable: "The demo is only available on the test network.",
     demoDefaultTitle: "Demo: mobile app design",
     commands: [
+      { command: "menu", description: "Main menu" },
       { command: "demo", description: "Demo: the whole flow on the test network" },
       { command: "new", description: "Create an invoice" },
       { command: "wallet", description: "Link a wallet" },
