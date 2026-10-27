@@ -96,7 +96,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
       log("info", `Sent: ${s}. Waiting for confirmation...`);
       const res = await connection.confirmTransaction({ signature: s, blockhash, lastValidBlockHeight }, "confirmed");
       if (res.value.err) throw new Error("Payment failed on-chain: " + JSON.stringify(res.value.err));
-      log("ok", `Paid. Split settled atomically. https://solscan.io/tx/${s}?cluster=devnet`);
+      log("ok", `Paid. Split settled atomically. ${solscanTx(s)}`);
       setJustPaid(s);
       // Server re-verifies on-chain, then pings the freelancer's Telegram. Best effort.
       fetch("/api/telegram/paid", {

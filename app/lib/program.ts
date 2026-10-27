@@ -1,4 +1,5 @@
 import bs58 from "bs58";
+import { DEFAULT_RPC } from "./cluster";
 import {
   Connection,
   PublicKey,
@@ -9,8 +10,8 @@ import {
 export const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || "11111111111111111111111111111111",
 );
-export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
-export const CLUSTER = "devnet";
+export { CLUSTER } from "./cluster";
+export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || DEFAULT_RPC;
 
 // Anchor discriminators, copied from target/idl/steppe_invoice.json (sha256("<kind>:<name>")[0..8]).
 const DISC = {

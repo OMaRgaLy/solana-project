@@ -18,6 +18,7 @@ export type Extra = {
   create: {
     errTitleLong: string;
     errVaultAddr: string;
+    noTreasury: string;
     reqName: string;
     reqNamePh: string;
     reqIin: string;
@@ -98,6 +99,7 @@ export const extra: Record<Language, Extra> = {
     create: {
       errTitleLong: "Название слишком длинное: максимум 64 байта (кириллица — по 2 байта на букву, около 32 букв)",
       errVaultAddr: "Некорректный адрес для комиссии",
+      noTreasury: "Не задан кошелёк платформы для комиссии (NEXT_PUBLIC_TREASURY). Создание счетов в основной сети отключено.",
       reqName: "ФИО или название ИП",
       reqNamePh: "ИП Смагулов А.Б.",
       reqIin: "ИИН / БИН (12 цифр)",
@@ -186,6 +188,7 @@ export const extra: Record<Language, Extra> = {
     create: {
       errTitleLong: "Атау тым ұзын: ең көбі 64 байт (кирилл әрпі — 2 байттан, шамамен 32 әріп)",
       errVaultAddr: "Комиссия мекенжайы дұрыс емес",
+      noTreasury: "Комиссия үшін платформа әмияны берілмеген (NEXT_PUBLIC_TREASURY). Негізгі желіде шот құру өшірулі.",
       reqName: "Аты-жөні немесе ЖК атауы",
       reqNamePh: "ЖК Смағұлов А.Б.",
       reqIin: "ЖСН / БСН (12 сан)",
@@ -274,6 +277,7 @@ export const extra: Record<Language, Extra> = {
     create: {
       errTitleLong: "The title is too long: 64 bytes at most (Cyrillic letters take 2 bytes each, about 32 letters)",
       errVaultAddr: "The fee address is not valid",
+      noTreasury: "The platform fee wallet is not set (NEXT_PUBLIC_TREASURY). Creating invoices on mainnet is disabled.",
       reqName: "Full name or sole proprietor name",
       reqNamePh: "Sole proprietor Smagulov A.B.",
       reqIin: "IIN / BIN (12 digits)",

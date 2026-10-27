@@ -7,7 +7,8 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { extra } from "@/lib/i18n/extra";
 import { Language } from "@/lib/i18n/translations";
-import { useMode } from "@/lib/mode/ModeContext";
+import { DEMO_ALLOWED, useMode } from "@/lib/mode/ModeContext";
+import { IS_MAINNET } from "@/lib/cluster";
 
 const WalletMultiButton = dynamic(
   async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
@@ -33,7 +34,7 @@ export default function Header() {
             </span>
             <span className="text-base font-semibold tracking-tight text-white">SteppeInvoice</span>
             {/* Both modes run on Solana Devnet today; say so instead of implying real money. */}
-            <span className="badge badge-amber" title="Solana Devnet">Devnet</span>
+            {!IS_MAINNET && <span className="badge badge-amber" title="Solana Devnet">Devnet</span>}
           </Link>
 
           {/* Navigation */}
@@ -71,7 +72,7 @@ export default function Header() {
             </Link>
 
             {/* Mode Switcher Toggle */}
-            <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 p-1 text-xs">
+            <div className={`items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 p-1 text-xs ${DEMO_ALLOWED ? "flex" : "hidden"}`}>
               <button
                 id="mode-live"
                 type="button"

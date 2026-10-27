@@ -85,10 +85,10 @@ async function rate() {
 /** The main menu: every action is one tap, so nobody has to remember commands. */
 function mainMenu(l: (typeof T)[Lang]): Button[][] {
   const rows: Button[][] = [
-    [{ text: l.btn.demo, callback_data: "cmd:/demo" }],
+    ...(demoAvailable() ? [[{ text: l.btn.demo, callback_data: "cmd:/demo" }]] : []),
     [{ text: l.btn.create, callback_data: "cmd:/new" }, { text: l.btn.mine, callback_data: "cmd:/my" }],
     [{ text: l.btn.tax, callback_data: "cmd:/tax" }, { text: l.btn.rate, callback_data: "cmd:/rate" }],
-    [{ text: l.btn.wallet, callback_data: "cmd:/wallet demo" }],
+    ...(demoAvailable() ? [[{ text: l.btn.wallet, callback_data: "cmd:/wallet demo" }]] : []),
     [
       { text: "RU", callback_data: "cmd:/lang ru" },
       { text: "KZ", callback_data: "cmd:/lang kk" },
@@ -192,7 +192,7 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
   }
   if (cmd === "/wallet") {
     if (!arg) return send(l.walletUsage);
-    if (arg.toLowerCase() === "demo") arg = DEMO_WALLETS.find((w) => w.id === "freelancer")!.publicKey;
+    if (arg.toLowerCase() === "demo" && demoAvailable()) arg = DEMO_WALLETS.find((w) => w.id === "freelancer")!.publicKey;
     if (!isKey(arg)) return send(l.walletBad);
     const list = await fetchInvoicesByCreator(conn(), new PublicKey(arg)).catch(() => []);
     // Mark what is already paid as notified so linking does not replay history.

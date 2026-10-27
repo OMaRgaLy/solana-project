@@ -2,7 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { IS_MAINNET } from "../cluster";
+
 export type AppMode = "live" | "demo";
+
+/** Demo wallets hold public keys, so demo mode only exists off mainnet. */
+export const DEMO_ALLOWED = !IS_MAINNET;
 
 interface ModeContextType {
   mode: AppMode;
@@ -24,12 +29,13 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("steppe_mode") as AppMode | null;
-    if (saved === "demo" || saved === "live") {
+    if ((saved === "demo" && DEMO_ALLOWED) || saved === "live") {
       setModeState(saved);
     }
   }, []);
 
   const setMode = (next: AppMode) => {
+    if (next === "demo" && !DEMO_ALLOWED) return;
     setModeState(next);
     localStorage.setItem("steppe_mode", next);
   };

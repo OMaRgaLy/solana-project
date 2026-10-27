@@ -9,7 +9,8 @@ import BlinkPreview from "@/components/BlinkPreview";
 import ShareCard from "@/components/ShareCard";
 import { initializeInvoiceIx, PROGRAM_ID } from "@/lib/program";
 import { computeSplit, validateSplit } from "@/lib/split";
-import { lamportsToSol, solToLamports } from "@/lib/format";
+import { lamportsToSol, solToLamports, solscanTx } from "@/lib/format";
+import { IS_MAINNET, NETWORK_LABEL, TREASURY } from "@/lib/cluster";
 import { errText, log } from "@/lib/log";
 import { demoById } from "@/lib/demoWallets";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -141,9 +142,11 @@ export default function CreatePage() {
   const collabBps = useCollab ? Math.round(collabPct * 100) : 0;
   const collabKey = useCollab ? parseKey(collabAddr) : null;
 
+  // The service fee goes to the platform treasury. Without one (devnet only) it falls back to the creator.
+  const treasuryKey = parseKey(TREASURY);
   const defaultVaultKey = isDemo
     ? new PublicKey(demoById("vault").publicKey)
-    : publicKey || new PublicKey("11111111111111111111111111111111");
+    : treasuryKey || publicKey || new PublicKey("11111111111111111111111111111111");
   const vaultKey = parseKey(vaultAddr) || defaultVaultKey;
 
   const problem = useMemo(() => {
@@ -151,9 +154,10 @@ export default function CreatePage() {
     if (new TextEncoder().encode(title.trim()).length > 64) return X.create.errTitleLong;
     if (!amount || amount <= 0n) return t.create.errAmountInvalid;
     if (vaultAddr.trim() && !parseKey(vaultAddr)) return X.create.errVaultAddr;
+    if (IS_MAINNET && !treasuryKey) return X.create.noTreasury;
     if (useCollab && collabBps > 0 && !collabKey) return t.create.errCollabAddr;
     return validateSplit(vaultBps, collabBps, !!collabKey);
-  }, [title, amount, vaultAddr, useCollab, collabBps, collabKey, vaultBps, t, X]);
+  }, [title, amount, vaultAddr, useCollab, collabBps, collabKey, vaultBps, treasuryKey, t, X]);
 
   const split = amount ? computeSplit(amount, vaultBps, collabBps) : null;
   const creatorPct = 100 - vaultPct - (useCollab ? collabPct : 0);
@@ -200,7 +204,7 @@ export default function CreatePage() {
       );
       if (res.value.err)
         throw new Error("Transaction failed on-chain: " + JSON.stringify(res.value.err));
-      log("ok", `Invoice created on Devnet. https://solscan.io/tx/${sig}?cluster=devnet`);
+      log("ok", `Invoice created on ${NETWORK_LABEL}. ${solscanTx(sig)}`);
 
       // Store invoice metadata for the Act of Completed Works
       try {

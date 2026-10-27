@@ -1,4 +1,5 @@
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { NETWORK_LABEL } from "@/lib/cluster";
 import { actionError, actionJson, actionOptions, originOf } from "@/lib/actions";
 import { lamportsToSol, splitLabel } from "@/lib/format";
 import { fetchInvoice, payInvoiceIx, RPC_URL } from "@/lib/program";
@@ -44,7 +45,7 @@ export async function GET(req: Request, ctx: Ctx) {
     type: "action",
     icon,
     title: `${invoice.title} — ${amount} SOL`,
-    description: `Invoice from freelancer ${creatorShort}. ${splitLabel(invoice)}. Verified on Solana Devnet by SteppeInvoice.`,
+    description: `Invoice from freelancer ${creatorShort}. ${splitLabel(invoice)}. Verified on ${NETWORK_LABEL} by SteppeInvoice.`,
     label: invoice.isPaid ? "Already paid" : "Pay Invoice",
     disabled: invoice.isPaid,
     ...(invoice.isPaid ? { error: { message: "This invoice has already been paid" } } : {}),

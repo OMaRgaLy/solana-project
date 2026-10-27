@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { landing } from "@/lib/i18n/landing";
-import { useMode } from "@/lib/mode/ModeContext";
+import { DEMO_ALLOWED, useMode } from "@/lib/mode/ModeContext";
 
 const SPLIT = [
   { key: "you", pct: 84, bar: "bg-teal-400", text: "text-teal-300" },
@@ -44,7 +44,7 @@ export default function Home() {
               type="button"
               onClick={() => setMode("demo")}
               disabled={isDemo}
-              className="btn btn-ghost px-6 py-3.5 text-base"
+              className={`btn btn-ghost px-6 py-3.5 text-base ${DEMO_ALLOWED ? "" : "hidden"}`}
             >
               {isDemo ? L.demoOn : L.demo}
             </button>
@@ -145,7 +145,7 @@ export default function Home() {
       </section>
 
       {/* Final CTA */}
-      <section className="card flex flex-col items-center gap-5 bg-[#171b21] py-14 text-center">
+      <section className={`card flex-col items-center gap-5 bg-[#171b21] py-14 text-center ${DEMO_ALLOWED ? "flex" : "hidden"}`}>
         <h2 className="max-w-xl text-2xl font-semibold text-white sm:text-3xl">{L.finalTitle}</h2>
         <button type="button" onClick={() => setMode("demo")} className="btn px-8 py-3.5 text-base">
           {L.finalCta}

@@ -1,4 +1,5 @@
 import { computeSplit } from "./split";
+import { EXPLORER_QUERY } from "./cluster";
 import type { InvoiceAccount } from "./program";
 
 export const LAMPORTS = 1_000_000_000n;
@@ -27,5 +28,5 @@ export function splitLabel(inv: Pick<InvoiceAccount, "amount" | "vaultBps" | "co
 }
 
 export const short = (s: string) => `${s.slice(0, 4)}…${s.slice(-4)}`;
-export const solscanTx = (sig: string) => `https://solscan.io/tx/${sig}?cluster=devnet`;
-export const solscanAddr = (a: string) => `https://solscan.io/account/${a}?cluster=devnet`;
+export const solscanTx = (sig: string) => `https://solscan.io/tx/${sig}${EXPLORER_QUERY}`;
+export const solscanAddr = (a: string) => `https://solscan.io/account/${a}${EXPLORER_QUERY}`;

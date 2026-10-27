@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CHAIN_ID } from "./cluster";
 
 export const ACTIONS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -6,8 +7,7 @@ export const ACTIONS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Encoding, Accept-Encoding, X-Action-Version, X-Blockchain-Ids",
   "Access-Control-Expose-Headers": "X-Action-Version, X-Blockchain-Ids",
   "X-Action-Version": "2.4",
-  // Devnet genesis hash (CAIP-2)
-  "X-Blockchain-Ids": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "X-Blockchain-Ids": CHAIN_ID,
   "Content-Type": "application/json",
 };
 
