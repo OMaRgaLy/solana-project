@@ -10,6 +10,7 @@ import BlinkPreview from "./BlinkPreview";
 import { solscanTx } from "@/lib/format";
 import { fetchInvoice } from "@/lib/program";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { useMode } from "@/lib/mode/ModeContext";
 import { extra } from "@/lib/i18n/extra";
 
 type Props = {
@@ -28,6 +29,7 @@ export default function ShareCard(p: Props) {
   const { t, lang } = useI18n();
   const X = extra[lang];
   const { connection } = useConnection();
+  const { net } = useMode();
   const [origin, setOrigin] = useState("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export default function ShareCard(p: Props) {
   const checkPaymentStatus = useCallback(async () => {
     if (isPaidOnChain) return;
     try {
-      const inv = await fetchInvoice(connection, new PublicKey(p.creator), BigInt(p.id));
+      const inv = await fetchInvoice(connection, new PublicKey(p.creator), BigInt(p.id), net);
       if (inv && inv.isPaid) {
         setIsPaidOnChain(true);
         confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 150, spread: 80, origin: { y: 0.6 } });
@@ -121,7 +123,7 @@ export default function ShareCard(p: Props) {
         </div>
         <a
           className="btn btn-ghost text-xs py-2 px-3.5 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20"
-          href={solscanTx(p.sig)}
+          href={solscanTx(p.sig, net)}
           target="_blank"
           rel="noreferrer"
         >

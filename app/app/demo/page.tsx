@@ -9,6 +9,7 @@ import { DEMO_WALLETS } from "@/lib/demoWallets";
 import { lamportsToSol, solscanAddr } from "@/lib/format";
 import { errText, log } from "@/lib/log";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { useMode } from "@/lib/mode/ModeContext";
 import { extra } from "@/lib/i18n/extra";
 
 const SIGNERS = ["freelancer", "client1", "client2"];
@@ -16,6 +17,11 @@ const SIGNERS = ["freelancer", "client1", "client2"];
 export default function DemoPage() {
   const { lang } = useI18n();
   const D = extra[lang].demo;
+  // The demo wallets only exist on devnet: opening this page enters demo mode.
+  const { isDemo, setMode } = useMode();
+  useEffect(() => {
+    if (!isDemo) setMode("demo");
+  }, [isDemo, setMode]);
   const { connection } = useConnection();
   const { wallet, select, connect, connected, connecting, publicKey, disconnect } = useWallet();
   const [balances, setBalances] = useState<Record<string, number | null>>({});
@@ -92,7 +98,7 @@ export default function DemoPage() {
                 <div className="font-mono text-lg">{bal == null ? "…" : `${lamportsToSol(BigInt(bal))} SOL`}</div>
               </div>
               <div className="text-xs text-slate-400">{D.roles[w.id] ?? w.role}</div>
-              <a className="block break-all font-mono text-xs text-teal-300 underline" href={solscanAddr(w.publicKey)} target="_blank" rel="noreferrer">{w.publicKey}</a>
+              <a className="block break-all font-mono text-xs text-teal-300 underline" href={solscanAddr(w.publicKey, "devnet")} target="_blank" rel="noreferrer">{w.publicKey}</a>
               {SIGNERS.includes(w.id) ? (
                 <button className="btn w-full" disabled={active} onClick={() => switchTo(w.label)}>
                   {active ? D.usedNow : D.use}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CHAIN_ID } from "./cluster";
+import { CHAIN_ID, DEFAULT_NET, NETS, type NetName } from "./cluster";
 
 export const ACTIONS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -11,12 +11,13 @@ export const ACTIONS_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
 };
 
-export function actionJson(body: unknown, status = 200) {
-  return new NextResponse(JSON.stringify(body), { status, headers: ACTIONS_HEADERS });
+export function actionJson(body: unknown, status = 200, net: NetName = DEFAULT_NET) {
+  // The chain id tells the Blink client which network the transaction is for.
+  return new NextResponse(JSON.stringify(body), { status, headers: { ...ACTIONS_HEADERS, "X-Blockchain-Ids": NETS[net].chainId } });
 }
 
-export function actionError(message: string, status = 400) {
-  return actionJson({ message }, status);
+export function actionError(message: string, status = 400, net: NetName = DEFAULT_NET) {
+  return actionJson({ message }, status, net);
 }
 
 export const actionOptions = () => new NextResponse(null, { status: 204, headers: ACTIONS_HEADERS });

@@ -98,7 +98,7 @@ export default function ActPage({
 
   useEffect(() => {
     if (!paySig) return;
-    QRCode.toDataURL(solscanTx(paySig), { margin: 1, width: 220 })
+    QRCode.toDataURL(solscanTx(paySig, invoice?.net), { margin: 1, width: 220 })
       .then(setQr)
       .catch(() => setQr(null));
   }, [paySig]);

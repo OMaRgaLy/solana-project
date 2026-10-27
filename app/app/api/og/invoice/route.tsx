@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { fetchInvoice, RPC_URL } from "@/lib/program";
+import { PublicKey } from "@solana/web3.js";
+import { findInvoice } from "@/lib/findInvoice";
 import { lamportsToSol, pct, short } from "@/lib/format";
 
 // Link-preview banner (Telegram, WhatsApp, X, Blinks). Same palette as the site: graphite, sage, sand.
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   let by = "";
   try {
     const creator = new PublicKey(url.searchParams.get("creator") || "");
-    const inv = await fetchInvoice(new Connection(RPC_URL, "confirmed"), creator, BigInt(url.searchParams.get("id") || "0"));
+    const inv = await findInvoice(creator, BigInt(url.searchParams.get("id") || "0"));
     if (inv) {
       title = inv.title;
       amount = lamportsToSol(inv.amount);

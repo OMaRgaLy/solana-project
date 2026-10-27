@@ -3,7 +3,8 @@
 // it as "Demo Client 1". This never runs against a real network.
 import { Connection, Keypair, PublicKey, sendAndConfirmTransaction, Transaction } from "@solana/web3.js";
 import { DEMO_WALLETS } from "../demoWallets";
-import { CLUSTER, fetchInvoice, initializeInvoiceIx, payInvoiceIx, RPC_URL } from "../program";
+import { fetchInvoice, initializeInvoiceIx, payInvoiceIx } from "../program";
+import { NETS } from "../cluster";
 import { solToLamports } from "../format";
 
 const DEFAULT_AMOUNT = "0.01";
@@ -13,9 +14,10 @@ const COLLAB_BPS = 1500; // a 15% collaborator share, so the split is visible
 
 const wallet = (id: string) => DEMO_WALLETS.find((w) => w.id === id)!;
 const keypair = (id: string) => Keypair.fromSecretKey(Uint8Array.from(wallet(id).secretKey));
-const conn = () => new Connection(RPC_URL, "confirmed");
+// Always devnet, whatever the site's default network is: the published demo keys must never touch mainnet.
+const conn = () => new Connection(NETS.devnet.rpc, "confirmed");
 
-export const demoAvailable = () => CLUSTER === "devnet";
+export const demoAvailable = () => NETS.devnet.configured;
 
 /** The contract limits titles to 64 BYTES; Cyrillic letters take two each. */
 export function truncateBytes(s: string, max: number): string {
@@ -49,6 +51,7 @@ export async function createDemoInvoice(title: string, amountSol: string): Promi
     vaultBps: FEE_BPS,
     collaborator: new PublicKey(wallet("collaborator").publicKey),
     collaboratorBps: COLLAB_BPS,
+    net: "devnet",
   });
   await sendAndConfirmTransaction(conn(), new Transaction().add(ix), [freelancer], { commitment: "confirmed" });
   return { creator: freelancer.publicKey.toBase58(), id: invoiceId.toString() };
@@ -59,7 +62,7 @@ export type PayResult = "ok" | "already_paid" | "not_found" | "no_funds" | "fail
 export async function payDemoInvoice(creator: string, id: string): Promise<PayResult> {
   const c = conn();
   try {
-    const inv = await fetchInvoice(c, new PublicKey(creator), BigInt(id));
+    const inv = await fetchInvoice(c, new PublicKey(creator), BigInt(id), "devnet");
     if (!inv) return "not_found";
     if (inv.isPaid) return "already_paid";
     // Only invoices issued by the demo freelancer, and only small ones: the demo client is a shared wallet.

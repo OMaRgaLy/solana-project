@@ -7,10 +7,10 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import SplitDonut from "@/components/SplitDonut";
 import BlinkPreview from "@/components/BlinkPreview";
 import ShareCard from "@/components/ShareCard";
-import { initializeInvoiceIx, PROGRAM_ID } from "@/lib/program";
+import { initializeInvoiceIx } from "@/lib/program";
 import { computeSplit, validateSplit } from "@/lib/split";
 import { lamportsToSol, solToLamports, solscanTx } from "@/lib/format";
-import { IS_MAINNET, NETWORK_LABEL, TREASURY } from "@/lib/cluster";
+import { NETS } from "@/lib/cluster";
 import { errText, log } from "@/lib/log";
 import { demoById } from "@/lib/demoWallets";
 import { useI18n } from "@/lib/i18n/I18nContext";
@@ -31,7 +31,7 @@ export default function CreatePage() {
   const { t, lang } = useI18n();
   const X = extra[lang];
   const { profile, saveProfile } = useProfile();
-  const { isDemo } = useMode();
+  const { isDemo, net, config } = useMode();
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
 
@@ -143,7 +143,7 @@ export default function CreatePage() {
   const collabKey = useCollab ? parseKey(collabAddr) : null;
 
   // The service fee goes to the platform treasury. Without one (devnet only) it falls back to the creator.
-  const treasuryKey = parseKey(TREASURY);
+  const treasuryKey = parseKey(config.treasury);
   const defaultVaultKey = isDemo
     ? new PublicKey(demoById("vault").publicKey)
     : treasuryKey || publicKey || new PublicKey("11111111111111111111111111111111");
@@ -154,10 +154,10 @@ export default function CreatePage() {
     if (new TextEncoder().encode(title.trim()).length > 64) return X.create.errTitleLong;
     if (!amount || amount <= 0n) return t.create.errAmountInvalid;
     if (vaultAddr.trim() && !parseKey(vaultAddr)) return X.create.errVaultAddr;
-    if (IS_MAINNET && !treasuryKey) return X.create.noTreasury;
+    if (!isDemo && !treasuryKey) return X.create.noTreasury;
     if (useCollab && collabBps > 0 && !collabKey) return t.create.errCollabAddr;
     return validateSplit(vaultBps, collabBps, !!collabKey);
-  }, [title, amount, vaultAddr, useCollab, collabBps, collabKey, vaultBps, treasuryKey, t, X]);
+  }, [title, amount, vaultAddr, useCollab, collabBps, collabKey, vaultBps, treasuryKey, isDemo, t, X]);
 
   const split = amount ? computeSplit(amount, vaultBps, collabBps) : null;
   const creatorPct = 100 - vaultPct - (useCollab ? collabPct : 0);
@@ -189,6 +189,7 @@ export default function CreatePage() {
         vaultBps,
         collaborator: collabKey,
         collaboratorBps: collabBps,
+        net,
       });
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
       const tx = new Transaction({
@@ -204,7 +205,7 @@ export default function CreatePage() {
       );
       if (res.value.err)
         throw new Error("Transaction failed on-chain: " + JSON.stringify(res.value.err));
-      log("ok", `Invoice created on ${NETWORK_LABEL}. ${solscanTx(sig)}`);
+      log("ok", `Invoice created on ${config.label}. ${solscanTx(sig, net)}`);
 
       // Store invoice metadata for the Act of Completed Works
       try {
@@ -246,7 +247,7 @@ export default function CreatePage() {
     );
   }
 
-  const programMissing = PROGRAM_ID.toBase58() === "11111111111111111111111111111111";
+  const programMissing = !NETS[net].configured;
   const solNum = parseFloat(amountStr) || 0;
   const usdEst = rate ? (solNum * rate.usd).toFixed(2) : "...";
   const kztEst = rate ? Math.round(solNum * rate.kzt).toLocaleString() : "...";

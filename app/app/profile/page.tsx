@@ -33,7 +33,7 @@ export default function ProfilePage() {
   const { profile, saveProfile } = useProfile();
   const { connection } = useConnection();
   const { publicKey, sendTransaction, select, connect, disconnect } = useWallet();
-  const { isDemo, setMode } = useMode();
+  const { isDemo, setMode, net } = useMode();
 
   const [activeTab, setActiveTab] = useState<"analytics" | "requisites" | "collabs">("analytics");
   const [form, setForm] = useState<UserProfile>(profile);
@@ -78,7 +78,7 @@ export default function ProfilePage() {
   const loadInvoices = useCallback(async (walletKey: PublicKey) => {
     setLoadingInvoices(true);
     try {
-      const list = await fetchInvoicesByCreator(connection, walletKey);
+      const list = await fetchInvoicesByCreator(connection, walletKey, net);
       setInvoices(list);
     } catch {
       setInvoices([]);
@@ -270,7 +270,7 @@ export default function ProfilePage() {
             <span className="flex h-2 w-2 rounded-full bg-teal-400"></span>
             <span className="font-mono font-semibold">{short(publicKey.toBase58())}</span>
             <a
-              href={solscanAddr(publicKey.toBase58())}
+              href={solscanAddr(publicKey.toBase58(), net)}
               target="_blank"
               rel="noreferrer"
               className="text-slate-400 hover:text-white"
@@ -678,7 +678,7 @@ export default function ProfilePage() {
                       <div className="flex items-center justify-between text-xs text-slate-400 font-mono bg-black/30 p-2 rounded-lg">
                         <span className="truncate max-w-xs">{c.wallet}</span>
                         <a
-                          href={solscanAddr(c.wallet)}
+                          href={solscanAddr(c.wallet, net)}
                           target="_blank"
                           rel="noreferrer"
                           className="text-teal-300 hover:underline shrink-0 ml-2"

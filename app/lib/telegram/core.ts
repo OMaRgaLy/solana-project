@@ -1,5 +1,7 @@
-import { Connection, PublicKey } from "@solana/web3.js";
-import { fetchInvoice, fetchInvoicesByCreator, RPC_URL, type InvoiceAccount } from "../program";
+import { PublicKey } from "@solana/web3.js";
+import { fetchInvoicesByCreator, type InvoiceAccount } from "../program";
+import { configuredNets } from "../cluster";
+import { connectionFor, findInvoice } from "../findInvoice";
 import { lamportsToSol, short, solscanTx } from "../format";
 import { computeSplit } from "../split";
 import { answerCallback, type Button, esc, sendMessage, setMyCommands } from "./api";
@@ -16,7 +18,17 @@ export const siteUrl = () =>
     (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")
   ).replace(/\/$/, "");
 
-const conn = () => new Connection(RPC_URL, "confirmed");
+/**
+ * Invoices of a wallet across the networks the app serves. For tax figures only real-money (mainnet) invoices count
+ * once mainnet is live: demo payments on devnet are not income.
+ */
+async function invoicesOf(owner: PublicKey, liveOnly = false): Promise<InvoiceAccount[]> {
+  const nets = configuredNets();
+  const use = liveOnly && nets.some((n) => !n.isDemo) ? nets.filter((n) => !n.isDemo) : nets;
+  const lists = await Promise.all(use.map((n) => fetchInvoicesByCreator(connectionFor(n.name), owner, n.name).catch(() => [])));
+  return lists.flat().sort((a, b) => Number(b.invoiceId - a.invoiceId));
+}
+
 const isKey = (s: string) => {
   try {
     new PublicKey(s);
@@ -41,7 +53,7 @@ export function draftUrl(d: { title: string; amount: string; client: string }) {
 export async function notifyIfPaid(creator: string, id: string): Promise<boolean> {
   let inv: InvoiceAccount | null;
   try {
-    inv = await fetchInvoice(conn(), new PublicKey(creator), BigInt(id));
+    inv = await findInvoice(new PublicKey(creator), BigInt(id));
   } catch {
     return false;
   }
@@ -52,13 +64,13 @@ export async function notifyIfPaid(creator: string, id: string): Promise<boolean
     ...(await setMembers(`watch:${creator}:${id}`)),
     ...(await setMembers(`wallet-chats:${creator}`)),
   ]);
-  const sigs = await conn().getSignaturesForAddress(inv.address, { limit: 5 }, "confirmed").catch(() => []);
+  const sigs = await connectionFor(inv.net).getSignaturesForAddress(inv.address, { limit: 5 }, "confirmed").catch(() => []);
   const sig = sigs.find((s) => !s.err)?.signature;
   const you = lamportsToSol(computeSplit(inv.amount, inv.vaultBps, inv.collaboratorBps).creator);
   for (const chat of chats) {
     const lang = ((await kvGet(`lang:${chat}`)) as Lang) || "ru";
     const l = T[lang];
-    await sendMessage(chat, l.paid(inv.title, lamportsToSol(inv.amount), you, sig ? solscanTx(sig) : siteUrl()), [
+    await sendMessage(chat, l.paid(inv.title, lamportsToSol(inv.amount), you, sig ? solscanTx(sig, inv.net) : siteUrl()), [
       [{ text: l.openAct, url: `${siteUrl()}/invoice/${creator}/${id}/act` }],
     ]);
   }
@@ -69,7 +81,7 @@ export async function notifyIfPaid(creator: string, id: string): Promise<boolean
 export async function pollLinkedWallets(): Promise<number> {
   let n = 0;
   for (const w of await setMembers("wallets")) {
-    const list = await fetchInvoicesByCreator(conn(), new PublicKey(w)).catch(() => []);
+    const list = await invoicesOf(new PublicKey(w));
     for (const inv of list) if (inv.isPaid && (await notifyIfPaid(w, inv.invoiceId.toString()))) n++;
   }
   return n;
@@ -159,7 +171,7 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
     }
     const w = parseWatchPayload(arg);
     if (w) {
-      const inv = await fetchInvoice(conn(), new PublicKey(w.creator), BigInt(w.id)).catch(() => null);
+      const inv = await findInvoice(new PublicKey(w.creator), BigInt(w.id)).catch(() => null);
       if (!inv) return send(l.notFound);
       await setAdd(`watch:${w.creator}:${w.id}`, String(chatId));
       await send(l.watching(inv.title));
@@ -194,7 +206,7 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
     if (!arg) return send(l.walletUsage);
     if (arg.toLowerCase() === "demo" && demoAvailable()) arg = DEMO_WALLETS.find((w) => w.id === "freelancer")!.publicKey;
     if (!isKey(arg)) return send(l.walletBad);
-    const list = await fetchInvoicesByCreator(conn(), new PublicKey(arg)).catch(() => []);
+    const list = await invoicesOf(new PublicKey(arg));
     // Mark what is already paid as notified so linking does not replay history.
     for (const i of list) if (i.isPaid) await setAdd("notified", `${arg}:${i.invoiceId}`);
     await kvSet(`wallet:${chatId}`, arg);
@@ -205,7 +217,7 @@ export async function handleMessage(chatId: number, text: string, langCode?: str
   if (cmd === "/my" || cmd === "/tax") {
     const w = await kvGet(`wallet:${chatId}`);
     if (!w) return send(l.needWallet);
-    const list = await fetchInvoicesByCreator(conn(), new PublicKey(w)).catch(() => []);
+    const list = await invoicesOf(new PublicKey(w), cmd === "/tax");
     if (cmd === "/my") {
       if (!list.length) return send(l.noInvoices);
       const lines = list.slice(0, 10).map((i) => `${i.isPaid ? "✅" : "⏳"} ${esc(i.title)} — ${lamportsToSol(i.amount)} SOL`);

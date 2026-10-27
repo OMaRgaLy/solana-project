@@ -7,6 +7,7 @@ import { computeSplit } from "@/lib/split";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { dash } from "@/lib/i18n/dashboard";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useMode } from "@/lib/mode/ModeContext";
 import { deadlines, estimate, type Regime } from "@/lib/tax/kz2026";
 
 type Currency = "KZT" | "USD" | "SOL";
@@ -31,6 +32,7 @@ export default function DashboardPage() {
   const d = dash[lang];
   const { user, ready, status, login, logout } = useAuth();
   const { connection } = useConnection();
+  const { net } = useMode();
   const { publicKey } = useWallet();
 
   const [doc, setDoc] = useState<Doc>(DEFAULT);
@@ -73,7 +75,7 @@ export default function DashboardPage() {
   // On-chain income: the creator's share of every paid invoice.
   useEffect(() => {
     if (!publicKey || !doc.includeChain) return setChain([]);
-    fetchInvoicesByCreator(connection, publicKey)
+    fetchInvoicesByCreator(connection, publicKey, net)
       .then((list) =>
         setChain(
           list.filter((i) => i.isPaid && i.paidAt).map((i) => ({

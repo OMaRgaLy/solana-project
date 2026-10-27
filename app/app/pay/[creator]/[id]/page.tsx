@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { use, useEffect, useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { use, useEffect, useMemo, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
 import confetti from "canvas-confetti";
 import type { WalletName } from "@solana/wallet-adapter-base";
 import { payInvoiceIx } from "@/lib/program";
 import { useInvoice } from "@/lib/useInvoice";
+import { connectionFor } from "@/lib/findInvoice";
 import { computeSplit } from "@/lib/split";
 import { lamportsToSol, pct, short, solscanAddr, solscanTx } from "@/lib/format";
 import { errText, log } from "@/lib/log";
@@ -26,10 +27,11 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
   const { creator, id } = use(params);
   const { t, lang } = useI18n();
   const X = extra[lang];
-  const { isDemo } = useMode();
-  const { connection } = useConnection();
+  const { isDemo, net } = useMode();
   const { publicKey, sendTransaction, select, connect } = useWallet();
   const { invoice, loading, error, paySig, reload } = useInvoice(creator, id);
+  // Talk to the network the invoice lives on, whatever mode the visitor arrived in.
+  const connection = useMemo(() => connectionFor(invoice?.net ?? net), [invoice?.net, net]);
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -96,7 +98,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
       log("info", `Sent: ${s}. Waiting for confirmation...`);
       const res = await connection.confirmTransaction({ signature: s, blockhash, lastValidBlockHeight }, "confirmed");
       if (res.value.err) throw new Error("Payment failed on-chain: " + JSON.stringify(res.value.err));
-      log("ok", `Paid. Split settled atomically. ${solscanTx(s)}`);
+      log("ok", `Paid. Split settled atomically. ${solscanTx(s, invoice.net)}`);
       setJustPaid(s);
       // Server re-verifies on-chain, then pings the freelancer's Telegram. Best effort.
       fetch("/api/telegram/paid", {
@@ -166,7 +168,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
           {t.pay.fromCreator}{" "}
           <a
             className="font-mono text-teal-300 underline hover:text-white"
-            href={solscanAddr(invoice.creator.toBase58())}
+            href={solscanAddr(invoice.creator.toBase58(), invoice.net)}
             target="_blank"
             rel="noreferrer"
           >
@@ -182,7 +184,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
 
             <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
               {sig && (
-                <a className="btn btn-ghost text-xs" href={solscanTx(sig)} target="_blank" rel="noreferrer">
+                <a className="btn btn-ghost text-xs" href={solscanTx(sig, invoice.net)} target="_blank" rel="noreferrer">
                   {t.common.solscan}
                 </a>
               )}

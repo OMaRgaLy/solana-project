@@ -12,7 +12,7 @@ import { useI18n } from "@/lib/i18n/I18nContext";
 const SIGNERS = ["freelancer", "client1", "client2"];
 
 export default function DemoBar() {
-  const { isDemo, setMode } = useMode();
+  const { isDemo, setMode, mainnetReady } = useMode();
   const { t } = useI18n();
   const { connection } = useConnection();
   const { wallet, select, connect, connected, disconnect } = useWallet();
@@ -87,15 +87,17 @@ export default function DemoBar() {
             );
           })}
 
-          <button
-            id="btn-exit-demo"
-            type="button"
-            onClick={() => setMode("live")}
-            className="ml-2 rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-slate-300 hover:text-white"
-            title={t.header.switchToLive}
-          >
-            ✕ {t.common.liveMode}
-          </button>
+          {mainnetReady && (
+            <button
+              id="btn-exit-demo"
+              type="button"
+              onClick={() => setMode("live")}
+              className="ml-2 rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-slate-300 hover:text-white"
+              title={t.header.switchToLive}
+            >
+              ✕ {t.common.liveMode}
+            </button>
+          )}
         </div>
       </div>
     </div>

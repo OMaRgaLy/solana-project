@@ -1,5 +1,5 @@
 import { computeSplit } from "./split";
-import { EXPLORER_QUERY } from "./cluster";
+import { DEFAULT_NET, NETS, type NetName } from "./cluster";
 import type { InvoiceAccount } from "./program";
 
 export const LAMPORTS = 1_000_000_000n;
@@ -28,5 +28,5 @@ export function splitLabel(inv: Pick<InvoiceAccount, "amount" | "vaultBps" | "co
 }
 
 export const short = (s: string) => `${s.slice(0, 4)}…${s.slice(-4)}`;
-export const solscanTx = (sig: string) => `https://solscan.io/tx/${sig}${EXPLORER_QUERY}`;
-export const solscanAddr = (a: string) => `https://solscan.io/account/${a}${EXPLORER_QUERY}`;
+export const solscanTx = (sig: string, net: NetName = DEFAULT_NET) => `https://solscan.io/tx/${sig}${NETS[net].explorerQuery}`;
+export const solscanAddr = (a: string, net: NetName = DEFAULT_NET) => `https://solscan.io/account/${a}${NETS[net].explorerQuery}`;

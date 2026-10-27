@@ -7,8 +7,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useI18n } from "@/lib/i18n/I18nContext";
 import { extra } from "@/lib/i18n/extra";
 import { Language } from "@/lib/i18n/translations";
-import { DEMO_ALLOWED, useMode } from "@/lib/mode/ModeContext";
-import { IS_MAINNET } from "@/lib/cluster";
+import { useMode } from "@/lib/mode/ModeContext";
 
 const WalletMultiButton = dynamic(
   async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
@@ -34,7 +33,7 @@ export default function Header() {
             </span>
             <span className="text-base font-semibold tracking-tight text-white">SteppeInvoice</span>
             {/* Both modes run on Solana Devnet today; say so instead of implying real money. */}
-            {!IS_MAINNET && <span className="badge badge-amber" title="Solana Devnet">Devnet</span>}
+            {isDemo && <span className="badge badge-amber" title="Solana Devnet">Devnet</span>}
           </Link>
 
           {/* Navigation */}
@@ -71,35 +70,18 @@ export default function Header() {
               {t.header.howItWorks}
             </Link>
 
-            {/* Mode Switcher Toggle */}
-            <div className={`items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 p-1 text-xs ${DEMO_ALLOWED ? "flex" : "hidden"}`}>
+            {/* A button, not a switch: demo mode is a side trip to Devnet. Leaving it is done from the demo bar. */}
+            {!isDemo && (
               <button
-                id="mode-live"
-                type="button"
-                onClick={() => setMode("live")}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                  !isDemo
-                    ? "bg-teal-400 text-slate-950 shadow-sm font-bold"
-                    : "text-slate-400 hover:text-white"
-                }`}
-                title={t.header.switchToLive}
-              >
-                Live
-              </button>
-              <button
-                id="mode-demo"
+                id="btn-demo-mode"
                 type="button"
                 onClick={() => setMode("demo")}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                  isDemo
-                    ? "bg-amber-400 text-slate-950 shadow-sm font-bold"
-                    : "text-slate-400 hover:text-white"
-                }`}
                 title={t.header.switchToDemo}
+                className="btn btn-ghost !px-3 !py-1.5 text-xs"
               >
-                Demo
+                {extra[lang].nav.demo}
               </button>
-            </div>
+            )}
 
             {/* Language Selector */}
             <div className="relative">

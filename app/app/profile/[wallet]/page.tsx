@@ -9,10 +9,12 @@ import { computeSplit } from "@/lib/split";
 import { lamportsToSol, short, solscanAddr } from "@/lib/format";
 import { errText, log } from "@/lib/log";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { useMode } from "@/lib/mode/ModeContext";
 import { extra } from "@/lib/i18n/extra";
 
 export default function ProfilePage({ params }: { params: Promise<{ wallet: string }> }) {
   const { lang } = useI18n();
+  const { net: network } = useMode();
   const X = extra[lang].wallet;
   const act = extra[lang].common.act;
   const { wallet } = use(params);
@@ -24,7 +26,7 @@ export default function ProfilePage({ params }: { params: Promise<{ wallet: stri
 
   const load = useCallback(async () => {
     try {
-      setItems(await fetchInvoicesByCreator(connection, new PublicKey(wallet)));
+      setItems(await fetchInvoicesByCreator(connection, new PublicKey(wallet), network));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load profile");
     }
@@ -70,7 +72,7 @@ export default function ProfilePage({ params }: { params: Promise<{ wallet: stri
         <div className="flex-1">
           <div className="inline-block rounded-full bg-teal-400/15 px-3 py-1 text-xs font-semibold text-teal-300">{X.badge}</div>
           <h1 className="mt-1 break-all font-mono text-lg">{wallet}</h1>
-          <a className="text-xs text-slate-400 underline" href={solscanAddr(wallet)} target="_blank" rel="noreferrer">{X.viewSolscan}</a>
+          <a className="text-xs text-slate-400 underline" href={solscanAddr(wallet, network)} target="_blank" rel="noreferrer">{X.viewSolscan}</a>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import bs58 from "bs58";
-import { DEFAULT_RPC } from "./cluster";
+import { DEFAULT_NET, NETS, type NetName } from "./cluster";
 import {
   Connection,
   PublicKey,
@@ -7,11 +7,11 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-export const PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID || "11111111111111111111111111111111",
-);
+/** The program id of a network (devnet and mainnet are separate deployments). */
+export const programIdOf = (net: NetName = DEFAULT_NET) => new PublicKey(NETS[net].programId);
+export const PROGRAM_ID = programIdOf();
 export { CLUSTER } from "./cluster";
-export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || DEFAULT_RPC;
+export const RPC_URL = NETS[DEFAULT_NET].rpc;
 
 // Anchor discriminators, copied from target/idl/steppe_invoice.json (sha256("<kind>:<name>")[0..8]).
 const DISC = {
@@ -52,14 +52,16 @@ export type InvoiceAccount = {
   paidAt: number | null;
   title: string;
   bump: number;
+  /** The network this account was read from; decides which program the instructions target. */
+  net: NetName;
 };
 
-export function invoicePda(creator: PublicKey, invoiceId: bigint): PublicKey {
+export function invoicePda(creator: PublicKey, invoiceId: bigint, net: NetName = DEFAULT_NET): PublicKey {
   const id = u64le(invoiceId);
-  return PublicKey.findProgramAddressSync([Buffer.from("invoice"), creator.toBuffer(), id], PROGRAM_ID)[0];
+  return PublicKey.findProgramAddressSync([Buffer.from("invoice"), creator.toBuffer(), id], programIdOf(net))[0];
 }
 
-export function decodeInvoice(address: PublicKey, data: Uint8Array): InvoiceAccount {
+export function decodeInvoice(address: PublicKey, data: Uint8Array, net: NetName = DEFAULT_NET): InvoiceAccount {
   // DataView instead of Buffer.readBigUInt64LE etc.: the browser Buffer polyfill lacks the BigInt methods.
   const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
   if (!INVOICE_DISC.every((b, i) => data[i] === b)) throw new Error("Not an invoice account");
@@ -87,18 +89,18 @@ export function decodeInvoice(address: PublicKey, data: Uint8Array): InvoiceAcco
   const len = dv.getUint32(o, true); o += 4;
   const title = new TextDecoder().decode(data.slice(o, o + len)); o += len;
   const bump = u8();
-  return { address, creator, invoiceId, amount, assetType, vaultRecipient, vaultBps, collaborator, collaboratorBps, payer, isPaid, createdAt, paidAt, title, bump };
+  return { address, creator, invoiceId, amount, assetType, vaultRecipient, vaultBps, collaborator, collaboratorBps, payer, isPaid, createdAt, paidAt, title, bump, net };
 }
 
-export async function fetchInvoice(conn: Connection, creator: PublicKey, invoiceId: bigint): Promise<InvoiceAccount | null> {
-  const address = invoicePda(creator, invoiceId);
+export async function fetchInvoice(conn: Connection, creator: PublicKey, invoiceId: bigint, net: NetName = DEFAULT_NET): Promise<InvoiceAccount | null> {
+  const address = invoicePda(creator, invoiceId, net);
   const info = await conn.getAccountInfo(address, "confirmed");
-  if (!info || !info.owner.equals(PROGRAM_ID)) return null;
-  return decodeInvoice(address, info.data);
+  if (!info || !info.owner.equals(programIdOf(net))) return null;
+  return decodeInvoice(address, info.data, net);
 }
 
-export async function fetchInvoicesByCreator(conn: Connection, creator: PublicKey): Promise<InvoiceAccount[]> {
-  const accounts = await conn.getProgramAccounts(PROGRAM_ID, {
+export async function fetchInvoicesByCreator(conn: Connection, creator: PublicKey, net: NetName = DEFAULT_NET): Promise<InvoiceAccount[]> {
+  const accounts = await conn.getProgramAccounts(programIdOf(net), {
     commitment: "confirmed",
     filters: [
       { memcmp: { offset: 0, bytes: bs58.encode(INVOICE_DISC) } },
@@ -106,7 +108,7 @@ export async function fetchInvoicesByCreator(conn: Connection, creator: PublicKe
     ],
   });
   return accounts
-    .map((a) => decodeInvoice(a.pubkey, a.account.data))
+    .map((a) => decodeInvoice(a.pubkey, a.account.data, net))
     .sort((a, b) => Number(b.invoiceId - a.invoiceId));
 }
 
@@ -120,6 +122,8 @@ export type CreateParams = {
   vaultBps: number;
   collaborator: PublicKey | null;
   collaboratorBps: number;
+  /** Defaults to the app's default network. */
+  net?: NetName;
 };
 
 export function initializeInvoiceIx(p: CreateParams): TransactionInstruction {
@@ -139,9 +143,9 @@ export function initializeInvoiceIx(p: CreateParams): TransactionInstruction {
     u16le(p.collaboratorBps),
   ]);
   return new TransactionInstruction({
-    programId: PROGRAM_ID,
+    programId: programIdOf(p.net),
     keys: [
-      { pubkey: invoicePda(p.creator, p.invoiceId), isSigner: false, isWritable: true },
+      { pubkey: invoicePda(p.creator, p.invoiceId, p.net), isSigner: false, isWritable: true },
       { pubkey: p.creator, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
@@ -150,8 +154,9 @@ export function initializeInvoiceIx(p: CreateParams): TransactionInstruction {
 }
 
 export function payInvoiceIx(inv: InvoiceAccount, payer: PublicKey): TransactionInstruction {
+  const programId = programIdOf(inv.net);
   return new TransactionInstruction({
-    programId: PROGRAM_ID,
+    programId,
     keys: [
       { pubkey: inv.address, isSigner: false, isWritable: true },
       { pubkey: payer, isSigner: true, isWritable: true },
@@ -160,7 +165,7 @@ export function payInvoiceIx(inv: InvoiceAccount, payer: PublicKey): Transaction
       // Anchor encodes a missing optional account as the program id.
       inv.collaborator
         ? { pubkey: inv.collaborator, isSigner: false, isWritable: true }
-        : { pubkey: PROGRAM_ID, isSigner: false, isWritable: false },
+        : { pubkey: programId, isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
     data: disc("pay_invoice"),
@@ -169,7 +174,7 @@ export function payInvoiceIx(inv: InvoiceAccount, payer: PublicKey): Transaction
 
 export function cancelInvoiceIx(inv: InvoiceAccount): TransactionInstruction {
   return new TransactionInstruction({
-    programId: PROGRAM_ID,
+    programId: programIdOf(inv.net),
     keys: [
       { pubkey: inv.address, isSigner: false, isWritable: true },
       { pubkey: inv.creator, isSigner: true, isWritable: true },

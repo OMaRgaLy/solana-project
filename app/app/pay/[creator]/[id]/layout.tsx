@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { fetchInvoice, RPC_URL } from "@/lib/program";
+import { PublicKey } from "@solana/web3.js";
+import { findInvoice } from "@/lib/findInvoice";
 import { lamportsToSol } from "@/lib/format";
 import { extra } from "@/lib/i18n/extra";
 import type { Language } from "@/lib/i18n/translations";
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
   let title = M.metaTitle;
   let description = M.metaDesc;
   try {
-    const inv = await fetchInvoice(new Connection(RPC_URL, "confirmed"), new PublicKey(creator), BigInt(id));
+    const inv = await findInvoice(new PublicKey(creator), BigInt(id));
     if (inv) {
       title = `${inv.title} — ${lamportsToSol(inv.amount)} SOL`;
       description = inv.isPaid ? M.metaPaid : M.metaDesc;

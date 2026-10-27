@@ -3,7 +3,7 @@ import type { Language } from "./translations";
 // Strings that used to be hardcoded in pages and components. Every language must provide every key:
 // a missing translation is a compile error, so nothing can silently stay in one language.
 export type Extra = {
-  nav: { finance: string };
+  nav: { finance: string; demo: string };
   common: { copied: string; copy: string; copyText: string; open: string; refresh: string; act: string; invoiceLink: string; cancel: string };
   log: { title: string; empty: string; copy: string; clear: string };
   blink: { you: string; tweet: string; bannerAlt: string; pay: string };
@@ -84,7 +84,7 @@ export type Extra = {
 
 export const extra: Record<Language, Extra> = {
   ru: {
-    nav: { finance: "Финансы" },
+    nav: { finance: "Финансы", demo: "Демо режим" },
     common: { copied: "✓ Скопировано", copy: "Копировать", copyText: "Копировать текст", open: "Открыть ↗", refresh: "Обновить", act: "Акт", invoiceLink: "Счёт →", cancel: "Отмена" },
     log: { title: "Журнал действий", empty: "Пока пусто. Здесь появится каждый шаг с кошельком и сетью.", copy: "копировать", clear: "очистить" },
     blink: { you: "Вы", tweet: "Счёт готов — оплата в 1 клик #Solana #Blinks", bannerAlt: "Баннер счёта", pay: "Оплатить счёт" },
@@ -173,7 +173,7 @@ export const extra: Record<Language, Extra> = {
     },
   },
   kk: {
-    nav: { finance: "Қаржы" },
+    nav: { finance: "Қаржы", demo: "Демо режим" },
     common: { copied: "✓ Көшірілді", copy: "Көшіру", copyText: "Мәтінді көшіру", open: "Ашу ↗", refresh: "Жаңарту", act: "Акт", invoiceLink: "Шот →", cancel: "Болдырмау" },
     log: { title: "Әрекеттер журналы", empty: "Әзірге бос. Әмиян мен желімен әр қадам осында көрінеді.", copy: "көшіру", clear: "тазалау" },
     blink: { you: "Сіз", tweet: "Шот дайын — 1 кликпен төлеңіз #Solana #Blinks", bannerAlt: "Шот баннері", pay: "Шотты төлеу" },
@@ -262,7 +262,7 @@ export const extra: Record<Language, Extra> = {
     },
   },
   en: {
-    nav: { finance: "Finance" },
+    nav: { finance: "Finance", demo: "Demo mode" },
     common: { copied: "✓ Copied", copy: "Copy", copyText: "Copy text", open: "Open ↗", refresh: "Refresh", act: "Act", invoiceLink: "Invoice →", cancel: "Cancel" },
     log: { title: "Activity log", empty: "Nothing yet. Every wallet and network step will appear here.", copy: "copy", clear: "clear" },
     blink: { you: "You", tweet: "Invoice is ready — pay in one click #Solana #Blinks", bannerAlt: "Invoice banner", pay: "Pay invoice" },
