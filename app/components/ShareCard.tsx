@@ -10,6 +10,7 @@ import BlinkPreview from "./BlinkPreview";
 import { solscanTx } from "@/lib/format";
 import { fetchInvoice } from "@/lib/program";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { extra } from "@/lib/i18n/extra";
 
 type Props = {
   creator: string;
@@ -24,7 +25,8 @@ type Props = {
 };
 
 export default function ShareCard(p: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const X = extra[lang];
   const { connection } = useConnection();
   const [origin, setOrigin] = useState("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -46,11 +48,11 @@ export default function ShareCard(p: Props) {
   const readyMessage = t.share.shareMsgTemplate(p.title, p.amountSol, payUrl);
 
   const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-    `💸 Invoice "${p.title}" — ${p.amountSol} SOL. Pay in 1-click on Solana:`
+    X.share.xText(p.title, p.amountSol)
   )}&url=${encodeURIComponent(blinkUrl)}&hashtags=${encodeURIComponent("Solana,Blinks,SteppeInvoice")}`;
 
   const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(payUrl)}&text=${encodeURIComponent(
-    `💸 Инвойс "${p.title}" на ${p.amountSol} SOL.\nОплата в 1 клик:`
+    X.share.tgText(p.title, p.amountSol)
   )}`;
 
   const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(readyMessage)}`;
@@ -77,13 +79,13 @@ export default function ShareCard(p: Props) {
       const inv = await fetchInvoice(connection, new PublicKey(p.creator), BigInt(p.id));
       if (inv && inv.isPaid) {
         setIsPaidOnChain(true);
-        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 150, spread: 80, origin: { y: 0.6 } });
         setTimeout(
-          () => confetti({ particleCount: 100, angle: 60, spread: 60, origin: { x: 0 } }),
+          () => confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 100, angle: 60, spread: 60, origin: { x: 0 } }),
           300
         );
         setTimeout(
-          () => confetti({ particleCount: 100, angle: 120, spread: 60, origin: { x: 1 } }),
+          () => confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 100, angle: 120, spread: 60, origin: { x: 1 } }),
           300
         );
       }
@@ -113,7 +115,7 @@ export default function ShareCard(p: Props) {
       <div className="rounded-2xl border border-teal-500/30 bg-teal-500/10 p-5 flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="text-xl font-bold text-teal-300 flex items-center gap-2">
-            <span>🎉</span> {t.share.titleSuccess}
+            <span></span> {t.share.titleSuccess}
           </div>
           <p className="text-xs text-slate-300">{t.share.subtitleSuccess}</p>
         </div>
@@ -130,10 +132,10 @@ export default function ShareCard(p: Props) {
       {/* Realtime payment radar notice */}
       {isPaidOnChain ? (
         <div className="rounded-2xl border border-emerald-500/50 bg-emerald-500/20 p-6 text-center space-y-3 shadow-xl">
-          <div className="text-4xl animate-bounce">🎊</div>
-          <div className="text-2xl font-extrabold text-emerald-300">{t.share.paidDetected}</div>
+          
+          <div className="text-2xl font-semibold text-emerald-300">{t.share.paidDetected}</div>
           <p className="text-xs text-slate-200">
-            Смарт-контракт Solana мгновенно разделил средства между кошельками.
+            {X.share.paidNote}
           </p>
           <div className="pt-2">
             <Link
@@ -146,8 +148,19 @@ export default function ShareCard(p: Props) {
         </div>
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 flex items-center gap-3 text-xs text-slate-300">
-          <span className="flex h-2.5 w-2.5 rounded-full bg-teal-400 animate-ping"></span>
-          <span>{t.share.waitingPayment}</span>
+          <span className="flex h-2.5 w-2.5 rounded-full bg-teal-400 animate-pulse"></span>
+          <span className="flex-1">{t.share.waitingPayment}</span>
+          {process.env.NEXT_PUBLIC_TELEGRAM_BOT && (
+            <a
+              id="btn-notify-telegram"
+              href={`https://t.me/${process.env.NEXT_PUBLIC_TELEGRAM_BOT}?start=i_${p.creator}_${p.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg border border-sky-500/40 bg-sky-500/15 px-3 py-1.5 font-bold text-sky-300 hover:bg-sky-500/25"
+            >
+              Telegram
+            </a>
+          )}
         </div>
       )}
 
@@ -168,7 +181,7 @@ export default function ShareCard(p: Props) {
               rel="noreferrer"
               className="flex items-center justify-center gap-2 rounded-xl border border-sky-500/30 bg-sky-500/15 py-3 text-xs font-bold text-sky-300 hover:bg-sky-500/25 transition-all text-center"
             >
-              <span className="text-base">✈️</span> {t.share.shareTg}
+              {t.share.shareTg}
             </a>
             <a
               href={waUrl}
@@ -176,7 +189,7 @@ export default function ShareCard(p: Props) {
               rel="noreferrer"
               className="flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/15 py-3 text-xs font-bold text-emerald-300 hover:bg-emerald-500/25 transition-all text-center"
             >
-              <span className="text-base">💬</span> {t.share.shareWa}
+              {t.share.shareWa}
             </a>
             <a
               href={xUrl}
@@ -200,7 +213,7 @@ export default function ShareCard(p: Props) {
                   onClick={() => copy("checkout", payUrl)}
                   className="font-bold text-teal-300 hover:underline flex items-center gap-1 text-[11px]"
                 >
-                  {copiedKey === "checkout" ? "✓ Скопировано" : "📋 Копировать"}
+                  {copiedKey === "checkout" ? X.common.copied : X.common.copy}
                 </button>
               </div>
               <div className="flex items-center gap-2 bg-black/40 rounded-lg p-2 font-mono text-xs text-slate-300 border border-white/5">
@@ -210,7 +223,7 @@ export default function ShareCard(p: Props) {
                   href={payPath}
                   className="text-xs text-teal-300 hover:text-white shrink-0 font-sans font-semibold underline"
                 >
-                  Открыть ↗
+                  {X.common.open}
                 </Link>
               </div>
             </div>
@@ -225,7 +238,7 @@ export default function ShareCard(p: Props) {
                   onClick={() => copy("blink", blinkUrl)}
                   className="font-bold text-teal-300 hover:underline flex items-center gap-1 text-[11px]"
                 >
-                  {copiedKey === "blink" ? "✓ Скопировано" : "📋 Копировать"}
+                  {copiedKey === "blink" ? X.common.copied : X.common.copy}
                 </button>
               </div>
               <div className="flex items-center gap-2 bg-black/40 rounded-lg p-2 font-mono text-xs text-slate-300 border border-white/5">
@@ -251,7 +264,7 @@ export default function ShareCard(p: Props) {
                   onClick={() => copy("msg", readyMessage)}
                   className="font-bold text-teal-300 hover:underline flex items-center gap-1 text-[11px]"
                 >
-                  {copiedKey === "msg" ? "✓ Скопировано" : "📋 Копировать текст"}
+                  {copiedKey === "msg" ? X.common.copied : X.common.copyText}
                 </button>
               </div>
               <div className="bg-black/40 rounded-lg p-2.5 font-sans text-xs text-slate-300 whitespace-pre-line border border-white/5 leading-relaxed">
@@ -270,7 +283,7 @@ export default function ShareCard(p: Props) {
               href={actPath}
               className="text-xs text-sky-300 hover:text-white underline font-semibold flex items-center gap-1"
             >
-              📄 {t.share.openAct}
+              {t.share.openAct}
             </Link>
           </div>
         </section>
@@ -282,11 +295,11 @@ export default function ShareCard(p: Props) {
             <h3 className="font-bold text-white text-sm">{t.share.qrTitle}</h3>
             {qrCodeDataUrl ? (
               <div className="rounded-2xl bg-white p-3.5 shadow-xl">
-                <img src={qrCodeDataUrl} alt="Invoice QR Code" className="h-44 w-44" />
+                <img src={qrCodeDataUrl} alt={X.share.qrAlt} className="h-44 w-44" />
               </div>
             ) : (
               <div className="h-44 w-44 bg-white/5 rounded-2xl animate-pulse flex items-center justify-center">
-                <span className="text-xs text-slate-500">Генерация QR...</span>
+                <span className="text-xs text-slate-500">{X.share.qrLoading}</span>
               </div>
             )}
             <p className="text-xs text-slate-400 max-w-xs leading-relaxed">{t.share.qrHint}</p>
@@ -294,12 +307,10 @@ export default function ShareCard(p: Props) {
 
           {/* Blink Preview */}
           <BlinkPreview
-            iconUrl={`${origin}/api/og/invoice?creator=${p.creator}&id=${p.id}`}
+            iconUrl={`${origin}/api/og/invoice?creator=${p.creator}&id=${p.id}&lang=${lang}`}
             domain={origin.replace(/^https?:\/\//, "") || "steppeinvoice.app"}
             title={`${p.title} — ${p.amountSol} SOL`}
-            description={`⚡ Авто-сплит: ${creatorPct}% Исполнителю${
-              p.collabPct ? ` · ${p.collabPct}% Напарнику` : ""
-            } · 1% Steppe Fee`}
+            description={X.share.blinkDesc(creatorPct, p.collabPct, p.vaultPct)}
           />
         </section>
       </div>

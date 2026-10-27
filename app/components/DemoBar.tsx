@@ -62,7 +62,7 @@ export default function DemoBar() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-amber-300 font-medium">
           <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span>🧪 {t.header.demoNotice}</span>
+          <span>{t.header.demoNotice}</span>
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">

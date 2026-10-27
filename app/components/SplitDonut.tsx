@@ -8,7 +8,7 @@ export default function SplitDonut({ parts, center }: { parts: Part[]; center: s
   return (
     <div className="flex items-center gap-6">
       <svg viewBox="0 0 140 140" className="h-36 w-36 shrink-0 -rotate-90" role="img" aria-label="Split distribution">
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#12233b" strokeWidth="18" />
+        <circle cx="70" cy="70" r={r} fill="none" stroke="#1f252d" strokeWidth="18" />
         {parts.map((p, i) => {
           const len = (p.value / total) * c;
           return (
@@ -20,7 +20,7 @@ export default function SplitDonut({ parts, center }: { parts: Part[]; center: s
             />
           );
         })}
-        <text x="70" y="70" transform="rotate(90 70 70)" textAnchor="middle" dominantBaseline="middle" fill="#e8eef7" fontSize="15" fontWeight="700">
+        <text x="70" y="70" transform="rotate(90 70 70)" textAnchor="middle" dominantBaseline="middle" fill="#e9e7e2" fontSize="15" fontWeight="600">
           {center}
         </text>
       </svg>

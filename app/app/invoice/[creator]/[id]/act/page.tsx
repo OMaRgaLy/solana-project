@@ -144,7 +144,7 @@ export default function ActPage({
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                🇰🇿 Қазақша
+                Қазақша
               </button>
               <button
                 id="btn-act-lang-ru"
@@ -155,7 +155,7 @@ export default function ActPage({
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                🇷🇺 Русский
+                Русский
               </button>
               <button
                 id="btn-act-lang-en"
@@ -166,7 +166,7 @@ export default function ActPage({
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                🇬🇧 English
+                English
               </button>
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function ActPage({
               onClick={() => window.print()}
               className="btn py-2 px-5 text-xs font-bold shadow-lg"
             >
-              📄 {t.act.printBtn}
+              {t.act.printBtn}
             </button>
           </div>
         </div>

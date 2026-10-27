@@ -13,6 +13,7 @@ import { computeSplit } from "@/lib/split";
 import { lamportsToSol, pct, short, solscanAddr, solscanTx } from "@/lib/format";
 import { errText, log } from "@/lib/log";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { extra } from "@/lib/i18n/extra";
 import { useMode } from "@/lib/mode/ModeContext";
 
 const WalletMultiButton = dynamic(
@@ -22,7 +23,8 @@ const WalletMultiButton = dynamic(
 
 export default function PayPage({ params }: { params: Promise<{ creator: string; id: string }> }) {
   const { creator, id } = use(params);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const X = extra[lang];
   const { isDemo } = useMode();
   const { connection } = useConnection();
   const { publicKey, sendTransaction, select, connect } = useWallet();
@@ -64,7 +66,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
   if (!invoice) {
     return (
       <div className="card mx-auto max-w-lg text-center py-10 space-y-3">
-        <div className="text-4xl">🔍</div>
+        <div className="text-4xl"></div>
         <h1 className="text-xl font-bold text-white">{t.pay.notFoundTitle}</h1>
         <p className="text-slate-400 text-xs">{t.pay.notFoundDesc}</p>
       </div>
@@ -95,9 +97,15 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
       if (res.value.err) throw new Error("Payment failed on-chain: " + JSON.stringify(res.value.err));
       log("ok", `Paid. Split settled atomically. https://solscan.io/tx/${s}?cluster=devnet`);
       setJustPaid(s);
-      confetti({ particleCount: 160, spread: 90, origin: { y: 0.6 } });
-      setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0 } }), 250);
-      setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1 } }), 250);
+      // Server re-verifies on-chain, then pings the freelancer's Telegram. Best effort.
+      fetch("/api/telegram/paid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ creator, id }),
+      }).catch(() => {});
+      confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 160, spread: 90, origin: { y: 0.6 } });
+      setTimeout(() => confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 100, angle: 60, spread: 70, origin: { x: 0 } }), 250);
+      setTimeout(() => confetti({ colors: ["#8fb5a6", "#c7b186", "#e9e7e2"], particleCount: 100, angle: 120, spread: 70, origin: { x: 1 } }), 250);
       await reload();
     } catch (e) {
       log("error", `Payment failed: ${errText(e)}`);
@@ -122,7 +130,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
 
   const rows: [string, string, bigint][] = [
     [t.pay.creatorShare, invoice.creator.toBase58(), split.creator],
-    [t.pay.protocolFee + " (" + pct(invoice.vaultBps) + ")", invoice.vaultRecipient.toBase58(), split.vault],
+    [t.pay.protocolFee, invoice.vaultRecipient.toBase58(), split.vault],
     ...(invoice.collaborator
       ? [
           [
@@ -167,7 +175,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
 
         {paid ? (
           <div className="space-y-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/15 p-6 animate-fadeIn">
-            <div className="text-4xl">🎉</div>
+            <div className="text-4xl"></div>
             <div className="text-lg font-bold text-emerald-300">{t.pay.paidTitle}</div>
             <p className="text-xs text-slate-300">{t.pay.paidDesc}</p>
 
@@ -191,7 +199,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
               {busy ? t.pay.payingBtn : `${t.pay.payBtn} ${lamportsToSol(invoice.amount)} SOL`}
             </button>
             <p className="text-[11px] text-slate-500">
-              Транзакция децентрализована и подписывается непосредственно вашим кошельком.
+              {X.pay.signNote}
             </p>
           </div>
         ) : (
@@ -203,7 +211,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
                 onClick={payAsDemoClient}
                 className="btn btn-ghost text-xs border-amber-400/40 text-amber-300 hover:bg-amber-400/20"
               >
-                ⚡ {t.pay.demoPayBtn}
+                {t.pay.demoPayBtn}
               </button>
             )}
             <span className="text-[11px] text-slate-500">Phantom, Solflare, Backpack</span>
@@ -216,7 +224,7 @@ export default function PayPage({ params }: { params: Promise<{ creator: string;
       {/* On-chain split breakdown */}
       <div className="card space-y-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-teal-300">
-          ⚡ {t.pay.splitBreakdown}
+          {t.pay.splitBreakdown}
         </h2>
         <ul className="divide-y divide-white/5 text-xs">
           {rows.map(([label, addr, amt]) => (

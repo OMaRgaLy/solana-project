@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Onest, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
 import DemoBar from "@/components/DemoBar";
 import LogPanel from "@/components/LogPanel";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin", "cyrillic"] });
+const bodyFont = Onest({ variable: "--font-body", subsets: ["latin", "cyrillic"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#070b14] text-slate-100">
+    <html lang="ru" className={`${bodyFont.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col text-slate-100">
         <Providers>
           <Header />
           <DemoBar />

@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { extra } from "@/lib/i18n/extra";
 import { useProfile, UserProfile } from "@/lib/profile/ProfileContext";
 import {
   SavedCollaborator,
@@ -27,7 +28,8 @@ const WalletMultiButton = dynamic(
 );
 
 export default function ProfilePage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const X = extra[lang];
   const { profile, saveProfile } = useProfile();
   const { connection } = useConnection();
   const { publicKey, sendTransaction, select, connect, disconnect } = useWallet();
@@ -109,12 +111,12 @@ export default function ProfilePage() {
     try {
       new PublicKey(trimmedWallet);
     } catch {
-      setCollabError("Некорректный адрес Solana-кошелька (Base58)");
+      setCollabError(X.profile.errCollabAddr);
       return;
     }
 
     if (!newCollabName.trim()) {
-      setCollabError("Укажите имя или роль напарника");
+      setCollabError(X.profile.errCollabName);
       return;
     }
 
@@ -143,10 +145,10 @@ export default function ProfilePage() {
     if (!publicKey) return;
     const demoCollab = demoById("collaborator");
     const updated = saveCollaborator(publicKey.toBase58(), {
-      name: "Алина (UI/UX Дизайнер)",
+      name: X.create.demoCollabName,
       wallet: demoCollab.publicKey,
       defaultPct: 15,
-      note: "Проектирование дизайн-систем, Figma, прототипы",
+      note: X.profile.demoCollabNote,
     });
     setCollabs(updated);
   };
@@ -194,9 +196,9 @@ export default function ProfilePage() {
   if (!publicKey) {
     return (
       <div className="mx-auto max-w-xl py-12 space-y-6">
-        <div className="card text-center p-8 space-y-5 border border-teal-500/30 bg-gradient-to-b from-[#0f172a] to-[#070b14] shadow-2xl">
+        <div className="card text-center p-8 space-y-5 border border-teal-500/30">
           <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-teal-500/10 border border-teal-500/30 text-3xl">
-            🔐
+            
           </div>
 
           <div className="space-y-2">
@@ -219,15 +221,15 @@ export default function ProfilePage() {
           </div>
 
           <div className="border-t border-white/10 pt-5 text-left text-xs space-y-2 text-slate-400">
-            <div className="font-semibold text-white">В личном кабинете доступно:</div>
+            <div className="font-semibold text-white">{X.profile.featuresTitle}</div>
             <div className="flex items-center gap-2">
-              <span className="text-teal-400">✓</span> Финансовая аналитика оборота и налога 3% СНР (ф. 910 РК)
+              <span className="text-teal-400">✓</span> {X.profile.feat1}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-teal-400">✓</span> Реквизиты ИП / ТОО для автоматической генерации Актов
+              <span className="text-teal-400">✓</span> {X.profile.feat2}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-teal-400">✓</span> База напарников с авто-подстановкой адресов и долей сплита
+              <span className="text-teal-400">✓</span> {X.profile.feat3}
             </div>
           </div>
         </div>
@@ -252,14 +254,14 @@ export default function ProfilePage() {
   const collabSol = Number(totalCollab) / 1e9;
 
   const grossKzt = rate ? Math.round(grossSol * rate.kzt) : 0;
-  const taxKzt = rate ? Math.round(grossKzt * 0.03) : 0; // 3% simplified tax KZ
+  const taxKzt = rate ? Math.round(grossKzt * 0.04) : 0; // 4% simplified regime, KZ 2026 (see lib/tax/kz2026.ts)
 
   return (
     <div className="space-y-6">
       {/* Header bar with connected wallet badge */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white">{t.profile.title}</h1>
+          <h1 className="text-2xl font-semibold text-white">{t.profile.title}</h1>
           <p className="text-xs text-slate-400 mt-0.5">{t.profile.subtitle}</p>
         </div>
 
@@ -327,7 +329,7 @@ export default function ProfilePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="card space-y-1 bg-white/5 border border-white/10">
               <div className="text-xs text-slate-400">{t.profile.statTotalInvoiced}</div>
-              <div className="text-2xl font-extrabold font-mono text-white">
+              <div className="text-2xl font-semibold font-mono text-white">
                 {lamportsToSol(totalGross)} <span className="text-xs text-teal-400 font-sans">SOL</span>
               </div>
               <div className="text-[11px] text-slate-400 font-mono">
@@ -337,7 +339,7 @@ export default function ProfilePage() {
 
             <div className="card space-y-1 bg-teal-500/5 border border-teal-500/20">
               <div className="text-xs text-teal-300 font-medium">{t.profile.statNetEarned}</div>
-              <div className="text-2xl font-extrabold font-mono text-emerald-400">
+              <div className="text-2xl font-semibold font-mono text-emerald-400">
                 {lamportsToSol(totalNet)} <span className="text-xs text-teal-400 font-sans">SOL</span>
               </div>
               <div className="text-[11px] text-emerald-300/80 font-mono">
@@ -347,7 +349,7 @@ export default function ProfilePage() {
 
             <div className="card space-y-1 bg-sky-500/5 border border-sky-500/20">
               <div className="text-xs text-sky-300 font-medium">{t.profile.statCollabPaid}</div>
-              <div className="text-2xl font-extrabold font-mono text-sky-300">
+              <div className="text-2xl font-semibold font-mono text-sky-300">
                 {lamportsToSol(totalCollab)} <span className="text-xs text-sky-400 font-sans">SOL</span>
               </div>
               <div className="text-[11px] text-sky-300/80 font-mono">
@@ -357,11 +359,11 @@ export default function ProfilePage() {
 
             <div className="card space-y-1 bg-amber-500/5 border border-amber-500/20">
               <div className="text-xs text-amber-300 font-medium">{t.profile.statTaxEstimate}</div>
-              <div className="text-2xl font-extrabold font-mono text-amber-400">
+              <div className="text-2xl font-semibold font-mono text-amber-400">
                 {taxKzt.toLocaleString()} <span className="text-xs text-amber-400 font-sans">₸</span>
               </div>
               <div className="text-[11px] text-amber-300/80">
-                Упрощенка 3% (ф. 910 РК)
+                {X.profile.taxNote}
               </div>
             </div>
           </div>
@@ -374,7 +376,7 @@ export default function ProfilePage() {
                 onClick={() => publicKey && loadInvoices(publicKey)}
                 className="text-xs text-teal-300 hover:underline"
               >
-                🔄 Обновить
+                {X.common.refresh}
               </button>
             </div>
 
@@ -392,11 +394,11 @@ export default function ProfilePage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-slate-400">
-                      <th className="py-2.5 px-3">Инвойс</th>
-                      <th className="py-2.5 px-3">Сумма</th>
-                      <th className="py-2.5 px-3">Сплит</th>
-                      <th className="py-2.5 px-3">Статус</th>
-                      <th className="py-2.5 px-3 text-right">Действия</th>
+                      <th className="py-2.5 px-3">{X.profile.thInvoice}</th>
+                      <th className="py-2.5 px-3">{X.profile.thAmount}</th>
+                      <th className="py-2.5 px-3">{X.profile.thSplit}</th>
+                      <th className="py-2.5 px-3">{X.profile.thStatus}</th>
+                      <th className="py-2.5 px-3 text-right">{X.profile.thActions}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -429,7 +431,7 @@ export default function ProfilePage() {
                                   : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                               }`}
                             >
-                              {inv.isPaid ? "ОПЛАЧЕНО" : "ОЖИДАЕТ"}
+                              {inv.isPaid ? X.profile.paid : X.profile.pending}
                             </span>
                           </td>
                           <td className="py-3 px-3 text-right">
@@ -438,14 +440,14 @@ export default function ProfilePage() {
                                 href={`/pay/${inv.creator.toBase58()}/${inv.invoiceId}`}
                                 className="text-teal-300 hover:underline"
                               >
-                                Счет →
+                                {X.common.invoiceLink}
                               </Link>
                               {inv.isPaid ? (
                                 <Link
                                   href={`/invoice/${inv.creator.toBase58()}/${inv.invoiceId}/act`}
                                   className="text-sky-300 hover:underline"
                                 >
-                                  Акт 📄
+                                  {X.common.act}
                                 </Link>
                               ) : (
                                 <button
@@ -453,7 +455,7 @@ export default function ProfilePage() {
                                   disabled={cancellingId === inv.invoiceId.toString()}
                                   className="text-red-400 hover:underline"
                                 >
-                                  {cancellingId === inv.invoiceId.toString() ? "..." : "Отмена"}
+                                  {cancellingId === inv.invoiceId.toString() ? "..." : X.profile.cancelBtn}
                                 </button>
                               )}
                             </div>
@@ -475,10 +477,10 @@ export default function ProfilePage() {
           <form onSubmit={handleSaveProfile} className="card space-y-4">
             <div>
               <h2 className="text-base font-bold text-teal-300">
-                🏢 Реквизиты для официального Акта выполненных работ (Форма Р-1)
+                {X.profile.reqTitle}
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Эти данные автоматически включаются в формируемый Акт выполненных работ с QR-печатью. Лишние поля (email, телефон, ники) удалены, так как система работает децентрализованно.
+                {X.profile.reqDesc}
               </p>
             </div>
 
@@ -521,7 +523,7 @@ export default function ProfilePage() {
               <label className="label">{t.profile.legalAddressLabel}</label>
               <input
                 className="input"
-                placeholder="г. Астана, ул. Достык, д. 18"
+                placeholder={X.profile.addrPlaceholder}
                 value={form.legalAddress}
                 onChange={(e) => setForm({ ...form, legalAddress: e.target.value })}
               />
@@ -560,7 +562,7 @@ export default function ProfilePage() {
                 <div>
                   <h3 className="text-base font-bold text-sky-300">{t.profile.addCollabTitle}</h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Сохраняйте напарников, чтобы при создании инвойса выбирать их из выпадающего списка в 1 клик.
+                    {X.profile.collabHint}
                   </p>
                 </div>
 
@@ -637,7 +639,7 @@ export default function ProfilePage() {
                     onClick={handleQuickAddDemoDesigner}
                     className="btn btn-ghost w-full text-xs py-2 text-amber-300 border-amber-500/30 hover:bg-amber-500/10"
                   >
-                    + Добавить Demo-дизайнера (Алина)
+                    {X.profile.addDemo}
                   </button>
                 )}
               </form>
@@ -646,12 +648,12 @@ export default function ProfilePage() {
             {/* Right: List of saved collaborators */}
             <div className="lg:col-span-7 space-y-3">
               <h3 className="text-base font-bold text-white">
-                Сохраненные напарники ({collabs.length})
+                {X.profile.savedTitle(collabs.length)}
               </h3>
 
               {collabs.length === 0 ? (
                 <div className="card text-center py-10 space-y-2 text-xs text-slate-400 border-dashed border-white/10">
-                  <span className="text-2xl">🤝</span>
+                  <span className="text-2xl"></span>
                   <p>{t.profile.noCollabsYet}</p>
                 </div>
               ) : (
@@ -664,12 +666,12 @@ export default function ProfilePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/20 text-sky-300 text-sm font-bold">
-                            👤
+                            
                           </span>
                           <span className="font-bold text-white text-sm">{c.name}</span>
                         </div>
                         <span className="badge badge-cyan font-mono text-xs">
-                          {c.defaultPct}% доля
+                          {X.profile.share(c.defaultPct)}
                         </span>
                       </div>
 

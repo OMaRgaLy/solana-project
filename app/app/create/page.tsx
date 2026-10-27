@@ -13,6 +13,7 @@ import { lamportsToSol, solToLamports } from "@/lib/format";
 import { errText, log } from "@/lib/log";
 import { demoById } from "@/lib/demoWallets";
 import { useI18n } from "@/lib/i18n/I18nContext";
+import { extra } from "@/lib/i18n/extra";
 import { useProfile } from "@/lib/profile/ProfileContext";
 import { useMode } from "@/lib/mode/ModeContext";
 import { getSavedCollaborators, SavedCollaborator } from "@/lib/profile/collaborators";
@@ -26,13 +27,19 @@ const parseKey = (s: string): PublicKey | null => {
 };
 
 export default function CreatePage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const X = extra[lang];
   const { profile, saveProfile } = useProfile();
   const { isDemo } = useMode();
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
 
-  const [title, setTitle] = useState("UI/UX Дизайн мобильного приложения");
+  const [title, setTitle] = useState("");
+  // The default title follows the interface language until the user (or the Telegram bot) sets one.
+  const [titleTouched, setTitleTouched] = useState(false);
+  useEffect(() => {
+    if (!titleTouched) setTitle(extra[lang].create.templateDesign);
+  }, [lang, titleTouched]);
   const [client, setClient] = useState("Acme Inc. (USA)");
   const [amountStr, setAmountStr] = useState("1.5");
   const [vaultPct, setVaultPct] = useState(1); // 1% Steppe Protocol Fee
@@ -67,6 +74,18 @@ export default function CreatePage() {
       .then((r) => r.json())
       .then(setRate)
       .catch(() => setRate({ kzt: 75000, usd: 150 }));
+  }, []);
+
+  // Draft handed over from the Telegram bot (/new): /create?title=…&amount=…&client=…
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const qt = q.get("title"), qa = q.get("amount"), qc = q.get("client");
+    if (qt) {
+      setTitleTouched(true);
+      setTitle(qt.slice(0, 80));
+    }
+    if (qa && /^\d+(\.\d{1,9})?$/.test(qa)) setAmountStr(qa);
+    if (qc) setClient(qc.slice(0, 80));
   }, []);
 
   useEffect(() => {
@@ -129,17 +148,18 @@ export default function CreatePage() {
 
   const problem = useMemo(() => {
     if (!title.trim()) return t.create.errTitleEmpty;
-    if (title.length > 64) return "Заголовок должен содержать не более 64 символов";
+    if (new TextEncoder().encode(title.trim()).length > 64) return X.create.errTitleLong;
     if (!amount || amount <= 0n) return t.create.errAmountInvalid;
-    if (vaultAddr.trim() && !parseKey(vaultAddr)) return "Некорректный адрес для отчислений";
+    if (vaultAddr.trim() && !parseKey(vaultAddr)) return X.create.errVaultAddr;
     if (useCollab && collabBps > 0 && !collabKey) return t.create.errCollabAddr;
     return validateSplit(vaultBps, collabBps, !!collabKey);
-  }, [title, amount, vaultAddr, useCollab, collabBps, collabKey, vaultBps, t]);
+  }, [title, amount, vaultAddr, useCollab, collabBps, collabKey, vaultBps, t, X]);
 
   const split = amount ? computeSplit(amount, vaultBps, collabBps) : null;
   const creatorPct = 100 - vaultPct - (useCollab ? collabPct : 0);
 
   const applyTemplate = (tmplTitle: string, tmplAmount: string) => {
+    setTitleTouched(true);
     setTitle(tmplTitle);
     setAmountStr(tmplAmount);
   };
@@ -230,7 +250,7 @@ export default function CreatePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-white">{t.create.title}</h1>
+        <h1 className="text-3xl font-semibold text-white">{t.create.title}</h1>
         <p className="mt-1 text-sm text-slate-400">{t.create.subtitle}</p>
       </div>
 
@@ -239,21 +259,21 @@ export default function CreatePage() {
         <span className="text-xs text-slate-400">{t.create.templateQuick}</span>
         <button
           type="button"
-          onClick={() => applyTemplate("UI/UX Дизайн мобильного приложения", "1.5")}
+          onClick={() => applyTemplate(X.create.templateDesign, "1.5")}
           className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-teal-300 hover:bg-white/10 transition-colors"
         >
           {t.create.templateDesign}
         </button>
         <button
           type="button"
-          onClick={() => applyTemplate("Разработка смарт-контракта", "5")}
+          onClick={() => applyTemplate(X.create.templateDev, "5")}
           className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-sky-300 hover:bg-white/10 transition-colors"
         >
           {t.create.templateDev}
         </button>
         <button
           type="button"
-          onClick={() => applyTemplate("Техническая консультация и аудит", "0.5")}
+          onClick={() => applyTemplate(X.create.templateConsult, "0.5")}
           className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-amber-300 hover:bg-white/10 transition-colors"
         >
           {t.create.templateAudit}
@@ -271,7 +291,7 @@ export default function CreatePage() {
                   {t.create.contractorProfileNotice}
                 </span>
                 <p className="text-white font-medium">
-                  {profile.companyOrName} · ИИН: {profile.iinBin}
+                  {profile.companyOrName} · {X.create.iinWord}: {profile.iinBin}
                 </p>
               </div>
               <Link href="/profile" className="text-teal-300 underline hover:text-white shrink-0 ml-3">
@@ -285,16 +305,16 @@ export default function CreatePage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="label text-[11px]">ФИО / Название ИП</label>
+                  <label className="label text-[11px]">{X.create.reqName}</label>
                   <input
                     className="input text-xs"
-                    placeholder="ИП Смагулов А.Б."
+                    placeholder={X.create.reqNamePh}
                     value={contractorName}
                     onChange={(e) => setContractorName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="label text-[11px]">ИИН / БИН (12 цифр)</label>
+                  <label className="label text-[11px]">{X.create.reqIin}</label>
                   <input
                     className="input font-mono text-xs"
                     placeholder="940512301824"
@@ -315,7 +335,7 @@ export default function CreatePage() {
                 </button>
               </div>
               {savedRequisitesNotice && (
-                <div className="text-[11px] text-teal-300">Реквизиты сохранены ✓</div>
+                <div className="text-[11px] text-teal-300">{X.create.reqSaved}</div>
               )}
             </div>
           )}
@@ -326,9 +346,11 @@ export default function CreatePage() {
               id="input-task-title"
               className="input"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitleTouched(true);
+                setTitle(e.target.value);
+              }}
               placeholder={t.create.taskTitlePlaceholder}
-              maxLength={64}
             />
           </div>
 
@@ -392,7 +414,7 @@ export default function CreatePage() {
                       id="select-saved-collab"
                       onChange={(e) => handleSelectSavedCollab(e.target.value)}
                       defaultValue=""
-                      className="input text-xs bg-[#0f172a] cursor-pointer"
+                      className="input text-xs bg-[#171b21] cursor-pointer"
                     >
                       <option value="" disabled>
                         {t.create.selectSavedCollabPlaceholder}
@@ -439,7 +461,7 @@ export default function CreatePage() {
                       onClick={() => {
                         const demoCollab = demoById("collaborator");
                         setCollabAddr(demoCollab.publicKey);
-                        setCollabName("Алина (UI/UX Дизайнер)");
+                        setCollabName(X.create.demoCollabName);
                       }}
                     >
                       {t.create.useDemoCollab}
@@ -471,12 +493,12 @@ export default function CreatePage() {
           <div>
             {programMissing && (
               <p className="mb-3 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-300">
-                Program ID не сконфигурирован (NEXT_PUBLIC_PROGRAM_ID).
+                {X.create.noProgram}
               </p>
             )}
             {!publicKey && (
               <p className="mb-3 text-xs text-slate-400">
-                Кошелек не подключен. Подключите Phantom/Solflare или включите Демо-режим в шапке.
+                {X.create.noWallet}
               </p>
             )}
             {problem && <p className="mb-3 text-xs text-amber-300">{problem}</p>}
@@ -497,30 +519,30 @@ export default function CreatePage() {
         <section className="space-y-6 lg:col-span-5">
           {/* Donut & Breakdown */}
           <div className="card space-y-4">
-            <h2 className="font-bold text-white text-base">⚡ Авто-распределение платежа (Ончейн)</h2>
+            <h2 className="font-bold text-white text-base">{X.create.splitTitle}</h2>
             <SplitDonut
               center={amount ? `${lamportsToSol(amount)} SOL` : "—"}
               parts={[
-                { label: "Исполнитель", value: creatorPct, color: "#14c8a4" },
-                { label: "Steppe Fee", value: vaultPct, color: "#f59e0b" },
-                ...(useCollab ? [{ label: "Напарник", value: collabPct, color: "#38bdf8" }] : []),
+                { label: X.create.partYou, value: creatorPct, color: "#8fb5a6" },
+                { label: X.create.partFee, value: vaultPct, color: "#c7b186" },
+                ...(useCollab ? [{ label: X.create.partCollab, value: collabPct, color: "#8ba3c1" }] : []),
               ]}
             />
             {split && (
               <div className="space-y-2 text-xs border-t border-white/5 pt-3">
                 <div className="flex justify-between">
-                  <span className="text-teal-300 font-semibold">Вам на кошелек ({creatorPct}%):</span>
+                  <span className="text-teal-300 font-semibold">{X.create.youGet(creatorPct)}</span>
                   <span className="font-mono text-white font-bold">
                     {lamportsToSol(split.creator)} SOL
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Комиссия протокола ({vaultPct}%):</span>
+                  <span>{X.create.feeLine(vaultPct)}</span>
                   <span className="font-mono">{lamportsToSol(split.vault)} SOL</span>
                 </div>
                 {useCollab && (
                   <div className="flex justify-between text-sky-300">
-                    <span>Напарнику ({collabPct}%):</span>
+                    <span>{X.create.collabLine(collabPct)}</span>
                     <span className="font-mono font-bold">
                       {lamportsToSol(split.collaborator)} SOL
                     </span>
@@ -559,20 +581,18 @@ export default function CreatePage() {
               <BlinkPreview
                 iconUrl="/preview-banner.svg"
                 domain="steppeinvoice.app"
-                title={`${title || "Инвойс"} — ${amount ? lamportsToSol(amount) : "..."} SOL`}
-                description={`⚡ Авто-сплит: ${creatorPct}% Исполнителю${
-                  useCollab ? ` · ${collabPct}% Напарнику` : ""
-                } · 1% Steppe Fee`}
+                title={`${title || X.create.invoiceFallback} — ${amount ? lamportsToSol(amount) : "..."} SOL`}
+                description={X.share.blinkDesc(creatorPct, useCollab ? collabPct : 0, vaultPct)}
               />
             ) : (
               <div className="card space-y-3 border-dashed border-teal-500/30 text-center py-6">
-                <span className="badge badge-solana">Превью чекаута для клиента</span>
-                <div className="text-lg font-bold text-white">{title || "Название задачи"}</div>
-                <div className="text-3xl font-extrabold font-mono text-teal-300">
+                <span className="badge badge-solana">{X.create.checkoutPreview}</span>
+                <div className="text-lg font-bold text-white">{title || X.create.taskFallback}</div>
+                <div className="text-3xl font-semibold font-mono text-teal-300">
                   {amount ? lamportsToSol(amount) : "0"} SOL
                 </div>
                 <p className="text-xs text-slate-400">
-                  Заказчик: {client || "Acme Inc."} · Оплата в 1 клик через Phantom
+                  {X.create.clientLine(client || "Acme Inc.")}
                 </p>
               </div>
             )}
