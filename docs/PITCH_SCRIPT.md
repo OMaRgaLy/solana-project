@@ -1,16 +1,44 @@
-# Pitch video outline (≤ 2:00): say it in your own words
+# Сценарий питча (3 минуты)
 
-The pitch is where judges score **team and story**. This is an outline with questions, not a script: write your own sentences, record, and keep it natural. English is recommended; simple English is fine, or speak Russian with English subtitles.
+Построен на вашей настоящей истории: она честная, и поэтому убедительная. Структура повторяет критерии жюри:
+проблема и актуальность, ценность, монетизация, рынок. Говорите своими словами, ориентируйтесь на смысл фраз.
 
-| Time | Beat | Your material (from your own answers) | Fill in yourself |
-| --- | --- | --- | --- |
-| 0:00–0:20 | **Who you are** | You are building SteppeInvoice to learn by doing and join the Solana ecosystem. | Your name, city, what you do, what you are learning. Say honestly if you are a beginner and that you built this with an AI coding assistant (Claude Code). |
-| 0:20–0:55 | **The problem, from your life** | You could not get paid through PayPal because of regional restrictions, and your bank card could not be used in payment systems. | One concrete moment this happened to you or someone you know. Who else has this problem: freelancers and contract workers in Central Asia. |
-| 0:55–1:25 | **What it does today** | Create an invoice, share a link (Blink), the client pays, the payment is split automatically between you, a savings vault and a collaborator, and you get an Act of Completed Works with a QR to the transaction. Works on Solana Devnet. | Show 5–10 seconds of the live product while you say it. |
-| 1:25–1:45 | **Why Solana, why now** | Low fees, fast confirmation, Blinks/Actions let people pay from a link in a feed. A local Solana workshop in your city inspired you to try. | Which part of the workshop made you want to build? |
-| 1:45–2:00 | **Next steps (label as plans)** | Safer payment lookup by a short invoice number (so a client opens the site from a bookmark and enters the number, instead of trusting links or QR codes), USDC support, yield for the savings vault. | What is the first thing you will do after the hackathon? |
+## 0:00 — История (20 сек)
 
-**Honesty rules for the recording**
-- Say "Devnet" and "test coins". Do not say "live users", "traction" or numbers you do not have.
-- Say "planned" for the short invoice number lookup, USDC and yield: they are not built yet.
-- Do not say the code was audited. It was tested, not audited.
+«Я начал этот проект, чтобы проверить свои силы. Но очень увлёкся и решил по-настоящему понять: а есть ли тут вообще проблема?»
+
+## 0:20 — Честный вывод (30 сек)
+
+«Первое, что мне сказали: зачем это всё, можно просто отправить адрес кошелька Phantom и получить оплату. И это правда. Если заказчик уже в крипте, перевод на адрес работает отлично. Поэтому я стал смотреть не на сам перевод, а на то, что происходит с фрилансером после него».
+
+## 0:50 — Где настоящая ценность (40 сек)
+
+«Исполнителю нужен не перевод, а процесс. Работаете вдвоём, значит, надо поделить деньги. Здесь контракт делит их сам, в момент оплаты, в одной транзакции. Хочется знать, что заплатили: приходит уведомление в Telegram. Заказчику нужен документ: готовый акт с QR-печатью, на русском, казахском и английском. И налоги: страница "Финансы" считает доход в тенге и показывает оценку по режиму самозанятого или ИП на упрощёнке, и ближайшие сроки. Адрес — это перевод. Счёт — это процесс».
+
+## 1:30 — Главное препятствие, прямо (30 сек)
+
+«Дальше я упёрся в реальный барьер: не у всех заказчиков есть крипта. Что у меня уже есть: инструкция в четыре шага. Установить Phantom, сохранить фразу, пополнить кошелёк, нажать "Оплатить". Дальше платить можно в один клик из любой страны, без границ. Следующий шаг — оплата картой через готового лицензированного провайдера, который сам конвертирует деньги в SOL, а контракт их делит. Свою платёжную систему я не строю и не буду: это интеграция с партнёром. Сегодня этого в продукте ещё нет, и я говорю об этом прямо».
+
+## 2:00 — Монетизация и рынок (40 сек)
+
+«Я зарабатываю 1% с оплаченного счёта. Не оплатили — ничего не платят, подписок нет. По данным Минфина, на март 2026 в Казахстане 346 тысяч самозанятых и 1,2 миллиона предпринимателей на упрощёнке. Это потолок рынка, а не число тех, кто получает крипту, и это ещё предстоит проверить. Растёт продукт так: каждый отправленный счёт показывает его новому клиенту, а вход через Telegram привычный. Риски я тоже вижу: оборот пока тестовый, а правила для крипты в регионе меняются».
+
+## 2:40 — Показ и призыв (20 сек)
+
+«Сейчас покажу за минуту: в Telegram-боте нажимаю "Попробовать в тестовой сети", бот создаёт счёт, оплачивает его как демо-клиент, и мне приходит уведомление с актом. Всё работает уже сегодня».
+
+## Живой показ (60–90 сек), порядок кликов
+
+1. Бот → `/start` → **Попробовать в тестовой сети**.
+2. Нажать **Оплатить как демо-клиент**, дождаться сообщения «Оплачено» с кнопкой акта.
+3. Открыть акт, показать QR и три языка.
+4. Сайт → **Финансы**: добавить доход вручную, переключить режим, показать налог и сроки.
+
+Запасной план, если сеть тормозит: заранее создайте и оплатите один демо-счёт, откройте его акт и страницу «Финансы» во вкладках.
+
+## Если спросят
+
+- **«А как платить тому, у кого нет крипты?»** — Сегодня: инструкция на четыре шага, она открывается прямо со страницы оплаты. Дальше: оплата картой через провайдера-партнёра. Доступность карточной покупки зависит от страны и карты, поэтому мы не обещаем её везде.
+- **«У вас есть лицензия на приём платежей?»** — Нет и не нужна: деньги идут напрямую от клиента через смарт-контракт, сервис их не держит. Карточная оплата будет у лицензированного партнёра.
+- **«Сколько пользователей?»** — Реального оборота нет, всё в тестовой сети. Следующий шаг — mainnet и первые настоящие счета.
+- **«Налоги на крипту — это легально?»** — Мы не трактуем статус криптодохода. Страница даёт оценку по ставкам режимов и честно помечена «не налоговая консультация».
