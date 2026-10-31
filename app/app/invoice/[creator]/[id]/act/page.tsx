@@ -523,7 +523,7 @@ export default function ActPage({
               АКТ ВЫПОЛНЕННЫХ РАБОТ (ОКАЗАННЫХ УСЛУГ) № {num}
             </h1>
             <div className="text-center text-xs text-neutral-600">
-              Дата: {fmtDateRu(timestamp)} г.
+              Дата: {fmtDateRu(timestamp)}
             </div>
 
             <div className="space-y-2 border-y border-neutral-300 py-3 text-xs">
