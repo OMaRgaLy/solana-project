@@ -254,8 +254,8 @@ export default function ActPage({
           /* КАЗАХСКАЯ ВЕРСИЯ */
           <div className="space-y-6">
             <div className="text-right text-[11px] text-neutral-600">
-              Қазақстан Республикасы Қаржы министрінің<br />
-              2014 жылғы 20 желтоқсандағы № 562 бұйрығына сәйкес нысан
+              Қазақстан Республикасы Қаржы министрінің 2012 жылғы<br />
+              20 желтоқсандағы № 562 бұйрығындағы Р-1 нысаны негізінде
             </div>
 
             <h1 className="text-center text-lg font-bold uppercase tracking-wide">
@@ -381,8 +381,8 @@ export default function ActPage({
           /* АНГЛИЙСКАЯ ВЕРСИЯ */
           <div className="space-y-6">
             <div className="text-right text-[11px] text-neutral-600">
-              Official Acceptance Certificate<br />
-              Crypto Asset Settlement Standard
+              Acceptance Certificate<br />
+              Settled on the Solana network
             </div>
 
             <h1 className="text-center text-lg font-bold uppercase tracking-wide">
@@ -515,8 +515,8 @@ export default function ActPage({
           /* РУССКАЯ ВЕРСИЯ (ПО ФОРМЕ Р-1 МФ РК) */
           <div className="space-y-6">
             <div className="text-right text-[11px] text-neutral-600">
-              Приложение 50 к приказу Министра финансов РК<br />
-              от 20 декабря 2012 года № 562 (Форма Р-1)
+              На основе формы Р-1 (приложение 50 к приказу<br />
+              Министра финансов РК от 20 декабря 2012 года № 562)
             </div>
 
             <h1 className="text-center text-lg font-bold uppercase tracking-wide">
